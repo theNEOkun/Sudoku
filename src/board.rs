@@ -181,5 +181,13 @@ mod board_test {
 
         assert_eq!(first, square);
         assert_eq!(second, index);
+
+        let square = 8;
+        let index = 6;
+
+        let (first, second) = get_index(6, 8);
+
+        assert_eq!(first, square);
+        assert_eq!(second, index);
     }
 }
