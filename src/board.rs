@@ -1,19 +1,20 @@
 use crate::position::Position;
 
 pub struct Board {
-    positions: Vec<Position>,
+    positions: Box<[Position; 9 * 9]>,
 }
 
 impl Board {
+    /// Create a mew empty board, with all positions filled with no value
     pub fn new_empty() -> Self {
-        let mut positions = Vec::new();
-        for y in 0..=9 {
-            for x in 0..=9 {
+        let mut positions = [Position::default(); 9 * 9];
+        for y in 0..9 {
+            for x in 0..9 {
                 positions[(y * 9) + x] = Position::new(x, y);
             }
         }
         Self {
-            positions
+            positions: Box::new(positions)
         }
     }
 }
@@ -43,5 +44,18 @@ impl std::ops::Index<usize> for Board {
     /// Indexes the underlying structure with an index
     fn index(&self, index: usize) -> &Self::Output {
         &self.positions[index]
+    }
+}
+
+#[cfg(test)]
+mod board_test {
+    use super::*;
+
+    #[test]
+    fn test_creation() {
+        let board = Board::new_empty();
+
+        let position = Position::new(2, 2);
+        assert_eq!(board[position].get_value(), None);
     }
 }

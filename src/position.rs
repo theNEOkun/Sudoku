@@ -1,5 +1,5 @@
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Copy, Debug)]
 pub struct Position {
     pub x: usize,
     pub y: usize,
@@ -47,6 +47,12 @@ impl Position {
     /// @param value is the value to set the position to
     pub fn set_value(&mut self, value: u8) {
         self.value = Some(value);
+    }
+}
+
+impl Default for Position {
+    fn default() -> Self {
+        Self::new(0, 0)
     }
 }
 
