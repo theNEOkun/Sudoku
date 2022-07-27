@@ -4,22 +4,27 @@ pub struct Board {
     positions: Box<[[Position; 9]; 9]>,
 }
 
-pub fn get_square(num: usize) -> usize {
+fn get_square(num: usize) -> usize {
     if num < 3 {
         0
     } else if num < 6 {
         1
-    } else if num < 9 {
-        2
     } else {
-        0
+        2
     }
 }
 
+/// Method used to get the indexes for the two arrays
+///
+/// @param x is the global x position (0 - 8)
+/// @param y is the global y position (0 - 8)
+///
+/// @return a tuple of (first, second)
 pub fn get_index(x: usize, y: usize) -> (usize, usize) {
-    let first_array = get_square(x) + get_square(y);
+    let x = x % 3;
+    let y = y % 3;
     let second_array = (y * 3) + x;
-    (first_array, second_array)
+    (get_square(x) + get_square(y), second_array)
 }
 
 impl Board {
@@ -146,7 +151,12 @@ mod board_test {
 
     #[test]
     fn test_get_indexes() {
-        let board = get_board();
+        let square = 4;
+        let index = 6;
 
+        let (first, second) = get_index(3, 5);
+
+        assert_eq!(first, square);
+        assert_eq!(second, index);
     }
 }
