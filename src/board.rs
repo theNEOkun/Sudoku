@@ -4,13 +4,31 @@ pub struct Board {
     positions: Box<[[Position; 9]; 9]>,
 }
 
-fn get_square(num: usize) -> usize {
-    if num < 3 {
-        0
-    } else if num < 6 {
-        1
+fn get_square(x: usize, y: usize) -> usize {
+    if y < 3 {
+        if x < 3 {
+            0
+        } else if x < 6 {
+            1
+        } else {
+            2
+        }
+    } else if y < 6 {
+        if x < 3 {
+            3
+        } else if x < 6 {
+            4
+        } else {
+            5
+        }
     } else {
-        2
+        if x < 3 {
+            6
+        } else if x < 6 {
+            7
+        } else {
+            8
+        }
     }
 }
 
@@ -21,10 +39,11 @@ fn get_square(num: usize) -> usize {
 ///
 /// @return a tuple of (first, second)
 pub fn get_index(x: usize, y: usize) -> (usize, usize) {
+    let first_array = get_square(x, y);
     let x = x % 3;
     let y = y % 3;
     let second_array = (y * 3) + x;
-    (get_square(x) + get_square(y), second_array)
+    (first_array, second_array)
 }
 
 impl Board {
