@@ -4,6 +4,10 @@ pub struct Board {
     positions: Box<[[Position; 9]; 9]>,
 }
 
+/// Gets the square based on the x and y
+///
+/// @params x is the coordinate on the x-axis,
+/// @params y is the coordinate on the y-axis
 fn get_square(x: usize, y: usize) -> usize {
     if y < 3 {
         if x < 3 {
