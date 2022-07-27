@@ -4,6 +4,20 @@ pub struct Board {
     positions: Vec<Position>,
 }
 
+impl Board {
+    pub fn new_empty() -> Self {
+        let mut positions = Vec::new();
+        for y in 0..=9 {
+            for x in 0..=9 {
+                positions[(y * 9) + x] = Position::new(x, y);
+            }
+        }
+        Self {
+            positions
+        }
+    }
+}
+
 impl std::ops::Index<Position> for Board {
     type Output = Position;
 
