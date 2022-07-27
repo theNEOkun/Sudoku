@@ -1,9 +1,10 @@
+use crate::board::get_index;
 
 #[derive(Clone, Copy, Debug)]
 pub struct Position {
     pub x: usize,
     pub y: usize,
-    pub index: usize,
+    pub index: (usize, usize),
     value: Option<u8>,
 }
 
@@ -16,7 +17,7 @@ impl Position {
         Self {
             x,
             y,
-            index: (y * 9) + x,
+            index: get_index(x, y),
             value: None,
         }
     }
@@ -30,7 +31,7 @@ impl Position {
         Self {
             x,
             y,
-            index: (y * 9) + x,
+            index: get_index(x, y),
             value: Some(value),
         }
     }
