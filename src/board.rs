@@ -69,7 +69,7 @@ impl Board {
     ///
     /// @param info is a vec of vec with u8s to fill each position in the board. 
     ///         inner vecs represent a square
-    pub fn new_with_info(info: Vec<Vec<u8>>) -> Self {
+    pub fn with_squares(info:  [[u8; 9]; 9]) -> Self {
         let mut positions = [[Position::default();9 ]; 9];
         
         for (o_index, outer_each) in info.iter().enumerate() {
@@ -78,11 +78,21 @@ impl Board {
             }
         }
 
-        for (o_index, outer_each) in positions.clone().iter().enumerate() {
+        Self {
+            positions: Box::new(positions)
+        }
+    }
+
+    /// Used to create and fill a board with values
+    ///
+    /// @param info is a vec of vec with u8s to fill each position in the board. 
+    ///         inner vecs represent a square
+    pub fn with_rows(info: [[u8; 9]; 9]) -> Self {
+        let mut positions = [[Position::default();9 ]; 9];
+        
+        for (o_index, outer_each) in info.iter().enumerate() {
             for (i_index, inner_each) in outer_each.iter().enumerate() {
-                if let None = inner_each.get_value() {
-                    positions[o_index][i_index].set_value(10);
-                }
+                    positions[o_index][i_index] = Position::with_value(i_index, o_index, *inner_each);
             }
         }
 
@@ -197,41 +207,41 @@ mod board_test {
     }
 
     fn get_board_with_values() -> Board {
-        let inner_info_1 = vec![0, 1, 2, 3, 4, 5, 6, 7, 8];
-        let inner_info_2 = vec![3, 4, 5, 6, 7, 8, 0, 1, 2];
-        let inner_info_3 = vec![6, 7, 8, 0, 1, 2, 3, 4, 5];
-        let inner_info_4 = vec![1, 2, 0, 4, 5, 3, 7, 8, 6];
-        let inner_info_5 = vec![4, 5, 3, 7, 8, 6, 1, 2, 0];
-        let inner_info_6 = vec![7, 8, 6, 1, 2, 0, 4, 5, 3];
-        let inner_info_7 = vec![2, 0, 1, 5, 3, 4, 8, 6, 7];
-        let inner_info_8 = vec![5, 3, 4, 8, 6, 7, 2, 0, 1];
-        let inner_info_9 = vec![8, 6, 7, 2, 0, 1, 5, 3, 4];
+        let inner_info_1 = [0, 1, 2, 3, 4, 5, 6, 7, 8];
+        let inner_info_2 = [3, 4, 5, 6, 7, 8, 0, 1, 2];
+        let inner_info_3 = [6, 7, 8, 0, 1, 2, 3, 4, 5];
+        let inner_info_4 = [1, 2, 0, 4, 5, 3, 7, 8, 6];
+        let inner_info_5 = [4, 5, 3, 7, 8, 6, 1, 2, 0];
+        let inner_info_6 = [7, 8, 6, 1, 2, 0, 4, 5, 3];
+        let inner_info_7 = [2, 0, 1, 5, 3, 4, 8, 6, 7];
+        let inner_info_8 = [5, 3, 4, 8, 6, 7, 2, 0, 1];
+        let inner_info_9 = [8, 6, 7, 2, 0, 1, 5, 3, 4];
 
-        let info = vec![
+        let info = [
             inner_info_1, inner_info_2, inner_info_3,
             inner_info_4, inner_info_5, inner_info_6,
             inner_info_7, inner_info_8, inner_info_9
         ];
-        Board::new_with_info(info)
+        Board::with_squares(info)
     }
 
     fn get_board_with_false_values() -> Board {
-        let inner_info_1 = vec![1, 1, 1, 1, 1, 1, 1, 1, 1];
-        let inner_info_2 = vec![1, 1, 1, 1, 1, 1, 1, 1, 1];
-        let inner_info_3 = vec![1, 1, 1, 1, 1, 1, 1, 1, 1];
-        let inner_info_4 = vec![1, 1, 1, 1, 1, 1, 1, 1, 1];
-        let inner_info_5 = vec![1, 1, 1, 1, 1, 1, 1, 1, 1];
-        let inner_info_6 = vec![1, 1, 1, 1, 1, 1, 1, 1, 1];
-        let inner_info_7 = vec![1, 1, 1, 1, 1, 1, 1, 1, 1];
-        let inner_info_8 = vec![1, 1, 1, 1, 1, 1, 1, 1, 1];
-        let inner_info_9 = vec![1, 1, 1, 1, 1, 1, 1, 1, 1];
+        let inner_info_1 = [1, 1, 1, 1, 1, 1, 1, 1, 1];
+        let inner_info_2 = [1, 1, 1, 1, 1, 1, 1, 1, 1];
+        let inner_info_3 = [1, 1, 1, 1, 1, 1, 1, 1, 1];
+        let inner_info_4 = [1, 1, 1, 1, 1, 1, 1, 1, 1];
+        let inner_info_5 = [1, 1, 1, 1, 1, 1, 1, 1, 1];
+        let inner_info_6 = [1, 1, 1, 1, 1, 1, 1, 1, 1];
+        let inner_info_7 = [1, 1, 1, 1, 1, 1, 1, 1, 1];
+        let inner_info_8 = [1, 1, 1, 1, 1, 1, 1, 1, 1];
+        let inner_info_9 = [1, 1, 1, 1, 1, 1, 1, 1, 1];
 
-        let info = vec![
+        let info = [
             inner_info_1, inner_info_2, inner_info_3,
             inner_info_4, inner_info_5, inner_info_6,
             inner_info_7, inner_info_8, inner_info_9
         ];
-        Board::new_with_info(info)
+        Board::with_squares(info)
     }
 
     #[test]
@@ -265,6 +275,18 @@ mod board_test {
         assert_eq!(Some(0), board[(1, 6)].get_value());
         assert_eq!(Some(1), board[(1, 7)].get_value());
         assert_eq!(Some(2), board[(1, 8)].get_value());
+
+        let board = get_board_with_false_values();
+
+        assert_eq!(Some(1), board[(0, 0)].get_value());
+        assert_eq!(Some(1), board[(0, 1)].get_value());
+        assert_eq!(Some(1), board[(0, 2)].get_value());
+        assert_eq!(Some(1), board[(0, 3)].get_value());
+        assert_eq!(Some(1), board[(0, 4)].get_value());
+        assert_eq!(Some(1), board[(0, 5)].get_value());
+        assert_eq!(Some(1), board[(0, 6)].get_value());
+        assert_eq!(Some(1), board[(0, 7)].get_value());
+        assert_eq!(Some(1), board[(0, 8)].get_value());
     }
 
     #[test]
