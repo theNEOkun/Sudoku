@@ -103,7 +103,8 @@ impl Board {
 
         for (o_index, outer_each) in info.iter().enumerate() {
             for (i_index, inner_each) in outer_each.iter().enumerate() {
-                positions[o_index][i_index].reset(i_index, o_index, *inner_each);
+                let (first, second) = get_index(i_index, o_index);
+                positions[first][second].reset(first, second, *inner_each);
             }
         }
 
@@ -134,12 +135,13 @@ impl Board {
     /// ## Returns
     ///  true if no number is seen twice, and all < 9
     pub fn test_row(&self, row: usize) -> bool {
-        let mut tests = [false; 9];
+        let mut tests = 0b000000000;
         for column in 0..9 as usize {
             let pos = self[(row, column)];
             if let Some(value) = pos.get_value() {
-                if !tests[value as usize] {
-                    tests[value as usize] = true;
+                let pos = 1 << value;
+                if !((tests & pos) == 1) {
+                    tests |= pos;
                 } else {
                     return false;
                 }
@@ -147,7 +149,7 @@ impl Board {
                 return false;
             }
         }
-        true
+        0b111111111 == tests
     }
 
     /// Method to test a given column for if it is correct
@@ -160,12 +162,13 @@ impl Board {
     ///
     /// true if no number is seen twice, and all < 9
     pub fn test_column(&self, column: usize) -> bool {
-        let mut tests = [false; 9];
+        let mut tests = 0b000000000;
         for row in 0..9 {
             let pos = self[(row, column)];
             if let Some(value) = pos.get_value() {
-                if !tests[value as usize] {
-                    tests[value as usize] = true;
+                let pos = 1 << value;
+                if !((tests & pos) == 1) {
+                    tests |= pos;
                 } else {
                     return false;
                 }
@@ -173,7 +176,7 @@ impl Board {
                 return false;
             }
         }
-        true
+        0b111111111 == tests
     }
 
     /// Method to test a square for if it is correct
@@ -189,12 +192,13 @@ impl Board {
     /// ## Returns
     /// true if no number is seen twice, and all < 9
     pub fn test_square(&self, square: usize) -> bool {
-        let mut tests = [false; 9];
+        let mut tests = 0b000000000;
         for position in 0..9 {
             let pos = self.positions[square][position];
             if let Some(value) = pos.get_value() {
-                if !tests[value as usize] {
-                    tests[value as usize] = true;
+                let pos = 1 << value;
+                if !((tests & pos) == 1) {
+                    tests |= pos;
                 } else {
                     return false;
                 }
@@ -202,7 +206,7 @@ impl Board {
                 return false;
             }
         }
-        true
+        0b111111111 == tests
     }
 }
 
