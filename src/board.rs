@@ -58,13 +58,21 @@ pub fn get_index(x: usize, y: usize) -> (usize, usize) {
 }
 
 impl Board {
+
+    pub fn new() -> Self {
+        let mut positions = [[Position::default(); 9]; 9];
+        Self {
+            positions: Box::new(positions),
+        }
+    }
+
     /// Create a mew empty board, with all positions filled with no value
     pub fn new_empty() -> Self {
         let mut positions = [[Position::default(); 9]; 9];
         for y in 0..9 {
             for x in 0..9 {
                 //let (first, second) = get_index(x, y);
-                positions[y][x] = Position::new(x, y);
+                positions[y][x].reset_none(x, y);
             }
         }
         Self {
@@ -214,9 +222,25 @@ impl std::fmt::Debug for Board {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let mut output = String::from("");
         for each in self.positions.iter() {
-            output += &format!("{:?}", each);
+            output += &format!("{:?}\n", each);
         }
-        write!(f, "{:?}", output)
+        write!(f, "")
+    }
+}
+
+impl std::fmt::Display for Board {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        for each in self.positions.iter() {
+            for each in each {
+                if let Some(val) = each.get_value() {
+                    write!(f, "|{}|", val).unwrap();
+                } else {
+                    write!(f, "| |").unwrap();
+                }
+            }
+            write!(f, "\n").unwrap();
+        }
+        write!(f, "")
     }
 }
 

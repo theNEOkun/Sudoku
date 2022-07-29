@@ -48,6 +48,18 @@ impl Position {
         self
     }
 
+    /// Reset with value to None
+    ///
+    /// ## Arguments
+    ///
+    /// * x - the position on the x-axis
+    /// * y - the position on the y-axis
+    pub fn reset_none(&mut self, x: usize, y: usize) -> &Self {
+        self.x = x;
+        self.y = y;
+        self
+    }
+
     /// Gets the value
     ///
     /// @return the value of the position
@@ -65,7 +77,11 @@ impl Position {
 
 impl std::fmt::Debug for Position {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "(x: {}, y:{}): {:?}", self.x, self.y, self.value)
+        if let Some(val) = self.value {
+            write!(f, "(x: {}, y:{}): {:?}", self.x, self.y, val)
+        } else {
+            write!(f, "(x: {}, y:{})", self.x, self.y)
+        }
     }
 }
 
