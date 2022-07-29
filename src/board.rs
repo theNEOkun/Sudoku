@@ -140,7 +140,7 @@ impl Board {
             let pos = self[(row, column)];
             if let Some(value) = pos.get_value() {
                 let pos = 1 << value;
-                if !((tests & pos) == 1) {
+                if !(((tests & pos) >> value) == 1) {
                     tests |= pos;
                 } else {
                     return false;
@@ -167,7 +167,7 @@ impl Board {
             let pos = self[(row, column)];
             if let Some(value) = pos.get_value() {
                 let pos = 1 << value;
-                if !((tests & pos) == 1) {
+                if !(((tests & pos) >> value) == 1) {
                     tests |= pos;
                 } else {
                     return false;
@@ -197,7 +197,7 @@ impl Board {
             let pos = self.positions[square][position];
             if let Some(value) = pos.get_value() {
                 let pos = 1 << value;
-                if !((tests & pos) == 1) {
+                if !(((tests & pos) >> value) == 1) {
                     tests |= pos;
                 } else {
                     return false;
