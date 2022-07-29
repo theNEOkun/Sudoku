@@ -65,6 +65,28 @@ impl Board {
         }
     }
 
+    pub fn new_with_info(info: Vec<Vec<u8>>) -> Self {
+        let mut positions = [[Position::default();9 ]; 9];
+        
+        for (o_index, outer_each) in info.iter().enumerate() {
+            for (i_index, inner_each) in outer_each.iter().enumerate() {
+                    positions[o_index][i_index] = Position::with_value(i_index, o_index, *inner_each);
+            }
+        }
+
+        for (o_index, outer_each) in positions.clone().iter().enumerate() {
+            for (i_index, inner_each) in outer_each.iter().enumerate() {
+                if let None = inner_each.get_value() {
+                    positions[o_index][i_index].set_value(10);
+                }
+            }
+        }
+
+        Self {
+            positions: Box::new(positions)
+        }
+    }
+
     /// Method to test a given row for if it is correct
     ///
     /// @param row is the row to test
@@ -150,6 +172,14 @@ mod board_test {
         Board::new_empty()
     }
 
+    fn get_board_with_values() -> Board {
+        let inner_info_1 = vec![1, 2, 3, 4, 5, 6, 7, 8, 9];
+        let inner_info_2 = vec![4, 5, 6, 7, 8, 9, 1, 2, 3];
+        let inner_info_3 = vec![7, 8, 9, 1, 2, 3, 4, 5, 6];
+        let info = vec![inner_info_1, inner_info_2, inner_info_3];
+        Board::new_with_info(info)
+    }
+
     #[test]
     fn test_creation() {
         let board = Board::new_empty();
@@ -159,17 +189,42 @@ mod board_test {
     }
 
     #[test]
-    fn test_row() {
-        let board = get_board();
+    fn test_row_manual() {
+        let board = get_board_with_values();
 
-        assert!(board.test_row(1));
+        assert_eq!(Some(1), board[(0, 0)].get_value());
+        assert_eq!(Some(2), board[(0, 1)].get_value());
+        assert_eq!(Some(3), board[(0, 2)].get_value());
+        assert_eq!(Some(4), board[(0, 3)].get_value());
+        assert_eq!(Some(5), board[(0, 4)].get_value());
+        assert_eq!(Some(6), board[(0, 5)].get_value());
+        assert_eq!(Some(7), board[(0, 6)].get_value());
+        assert_eq!(Some(8), board[(0, 7)].get_value());
+        assert_eq!(Some(9), board[(0, 8)].get_value());
+
+        assert_eq!(Some(4), board[(1, 0)].get_value());
+        assert_eq!(Some(5), board[(1, 1)].get_value());
+        assert_eq!(Some(6), board[(1, 2)].get_value());
+        assert_eq!(Some(7), board[(1, 3)].get_value());
+        assert_eq!(Some(8), board[(1, 4)].get_value());
+        assert_eq!(Some(9), board[(1, 5)].get_value());
+        assert_eq!(Some(1), board[(1, 6)].get_value());
+        assert_eq!(Some(2), board[(1, 7)].get_value());
+        assert_eq!(Some(3), board[(1, 8)].get_value());
+    }
+
+    #[test]
+    fn test_row() {
+        let board = get_board_with_values();
+
+        assert!(board.test_row(0));
     }
 
     #[test]
     fn test_column() {
-        let board = get_board();
+        let board = get_board_with_values();
 
-        assert!(board.test_column(1));
+        assert!(board.test_column(0));
     }
 
     #[test]
