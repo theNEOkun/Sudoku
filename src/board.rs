@@ -1,13 +1,17 @@
 use crate::position::Position;
 
 pub struct Board {
+    /// is the matrix of which the sudoku-square is
+    /// [position](../position/struct.Position.html)
     positions: Box<[[Position; 9]; 9]>,
 }
 
 /// Gets the square based on the x and y
 ///
-/// @params x is the coordinate on the x-axis,
-/// @params y is the coordinate on the y-axis
+/// # Arguments
+///
+/// *s x is the coordinate on the x-axis,
+/// *s y is the coordinate on the y-axis
 fn get_square(x: usize, y: usize) -> usize {
     if y < 3 {
         if x < 3 {
@@ -38,8 +42,10 @@ fn get_square(x: usize, y: usize) -> usize {
 
 /// Method used to get the indexes for the two arrays
 ///
-/// @param x is the global x position (0 - 8)
-/// @param y is the global y position (0 - 8)
+/// # Arguments
+///
+/// * x - is the global x position (0 - 8)
+/// * y - is the global y position (0 - 8)
 ///
 /// @return a tuple of (first, second)
 pub fn get_index(x: usize, y: usize) -> (usize, usize) {
@@ -67,14 +73,16 @@ impl Board {
 
     /// Used to create and fill a board with values
     ///
-    /// @param info is a vec of vec with u8s to fill each position in the board. 
+    /// # Arguments
+    ///
+    /// * info - is a vec of vec with u8s to fill each position in the board. 
     ///         inner vecs represent a square
     pub fn with_squares(info:  [[u8; 9]; 9]) -> Self {
-        let mut positions = [[Position::default();9 ]; 9];
+        let mut positions = [[Position::default(); 9]; 9];
         
         for (o_index, outer_each) in info.iter().enumerate() {
             for (i_index, inner_each) in outer_each.iter().enumerate() {
-                    positions[o_index][i_index] = Position::with_value(i_index, o_index, *inner_each);
+                    positions[o_index][i_index].reset(i_index, o_index, *inner_each);
             }
         }
 
@@ -85,14 +93,16 @@ impl Board {
 
     /// Used to create and fill a board with values
     ///
-    /// @param info is a vec of vec with u8s to fill each position in the board. 
+    /// # Arguments
+    ///
+    /// * info - is a vec of vec with u8s to fill each position in the board. 
     ///         inner vecs represent a square
     pub fn with_rows(info: [[u8; 9]; 9]) -> Self {
-        let mut positions = [[Position::default();9 ]; 9];
+        let mut positions = [[Position::default(); 9]; 9];
         
         for (o_index, outer_each) in info.iter().enumerate() {
             for (i_index, inner_each) in outer_each.iter().enumerate() {
-                    positions[o_index][i_index] = Position::with_value(i_index, o_index, *inner_each);
+                    positions[o_index][i_index].reset(i_index, o_index, *inner_each);
             }
         }
 
@@ -116,7 +126,10 @@ impl Board {
 
     /// Method to test a given row for if it is correct
     ///
-    /// @param row is the row to test
+    /// # Arguments
+    ///
+    /// * row - is the row to test
+    /// @return true if no number is seen twice, and all < 9
     pub fn test_row(&self, row: usize) -> bool {
         let mut tests = [false; 9];
         for column in 0..9 as usize {
@@ -136,7 +149,13 @@ impl Board {
 
     /// Method to test a given column for if it is correct
     ///
-    /// @param column is the column to test
+    /// # Arguments
+    ///
+    /// * column - The column to test
+    ///
+    /// # Return
+    ///
+    /// true if no number is seen twice, and all < 9
     pub fn test_column(&self, column: usize) -> bool {
         let mut tests = [false; 9];
         for row in 0..9 {
@@ -156,11 +175,15 @@ impl Board {
 
     /// Method to test a square for if it is correct
     ///
-    /// @param square is  the square to test [
-    /// 0, 1, 2
-    /// 3, 4, 5
-    /// 6, 7, 8
+    /// # Arguments
+    ///
+    /// * square - is  the square to test 
+    /// [
+    ///     0, 1, 2,
+    ///     3, 4, 5,
+    ///     6, 7, 8
     /// ]
+    /// @return true if no number is seen twice, and all < 9
     pub fn test_square(&self, square: usize) -> bool {
         let mut tests = [false; 9];
         for position in 0..9 {

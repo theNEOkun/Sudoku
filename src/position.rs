@@ -36,6 +36,18 @@ impl Position {
         }
     }
 
+    /// Reset the value from default to with information
+    ///
+    /// @param x is the position in the x-axis
+    /// @param y is the position in the y-axis
+    /// @param value is the value the position should have
+    pub fn reset(&mut self, x: usize, y: usize, value: u8) -> &Self {
+        self.x = x;
+        self.y = y;
+        self.value = Some(value);
+        self
+    }
+
     /// Gets the value
     ///
     /// @return the value of the position
@@ -66,6 +78,11 @@ impl std::cmp::PartialEq for Position {
 #[cfg(test)]
 mod position_test {
     use super::*;
+
+    fn get_addr(addr: &Position) -> usize {
+        let raw_prt = addr as *const Position;
+        raw_prt as usize
+    }
 
     #[test]
     fn test_value() {
