@@ -8,7 +8,7 @@ pub struct Board {
 
 /// Gets the square based on the x and y
 ///
-/// # Arguments
+/// ## Arguments
 ///
 /// *s x is the coordinate on the x-axis,
 /// *s y is the coordinate on the y-axis
@@ -42,12 +42,13 @@ fn get_square(x: usize, y: usize) -> usize {
 
 /// Method used to get the indexes for the two arrays
 ///
-/// # Arguments
+/// ## Arguments
 ///
 /// * x - is the global x position (0 - 8)
 /// * y - is the global y position (0 - 8)
 ///
-/// @return a tuple of (first, second)
+/// ## Returns
+/// a tuple of (first, second)
 pub fn get_index(x: usize, y: usize) -> (usize, usize) {
     let first_array = get_square(x, y);
     let x = x % 3;
@@ -67,53 +68,54 @@ impl Board {
             }
         }
         Self {
-            positions: Box::new(positions)
+            positions: Box::new(positions),
         }
     }
 
     /// Used to create and fill a board with values
     ///
-    /// # Arguments
+    /// ## Arguments
     ///
-    /// * info - is a vec of vec with u8s to fill each position in the board. 
+    /// * info - is a vec of vec with u8s to fill each position in the board.
     ///         inner vecs represent a square
-    pub fn with_squares(info:  [[u8; 9]; 9]) -> Self {
+    pub fn with_squares(info: [[u8; 9]; 9]) -> Self {
         let mut positions = [[Position::default(); 9]; 9];
-        
+
         for (o_index, outer_each) in info.iter().enumerate() {
             for (i_index, inner_each) in outer_each.iter().enumerate() {
-                    positions[o_index][i_index].reset(i_index, o_index, *inner_each);
+                positions[o_index][i_index].reset(i_index, o_index, *inner_each);
             }
         }
 
         Self {
-            positions: Box::new(positions)
+            positions: Box::new(positions),
         }
     }
 
     /// Used to create and fill a board with values
     ///
-    /// # Arguments
+    /// ## Arguments
     ///
-    /// * info - is a vec of vec with u8s to fill each position in the board. 
+    /// * info - is a vec of vec with u8s to fill each position in the board.
     ///         inner vecs represent a square
     pub fn with_rows(info: [[u8; 9]; 9]) -> Self {
         let mut positions = [[Position::default(); 9]; 9];
-        
+
         for (o_index, outer_each) in info.iter().enumerate() {
             for (i_index, inner_each) in outer_each.iter().enumerate() {
-                    positions[o_index][i_index].reset(i_index, o_index, *inner_each);
+                positions[o_index][i_index].reset(i_index, o_index, *inner_each);
             }
         }
 
         Self {
-            positions: Box::new(positions)
+            positions: Box::new(positions),
         }
     }
 
     /// Method to test the whole board
     ///
-    /// @return true if the board is correct, else false
+    /// ## Returns
+    /// true if the board is correct, else false
     pub fn test_board(&self) -> bool {
         let mut returnval = true;
         for each in 0..9 {
@@ -126,10 +128,11 @@ impl Board {
 
     /// Method to test a given row for if it is correct
     ///
-    /// # Arguments
+    /// ## Arguments
     ///
     /// * row - is the row to test
-    /// @return true if no number is seen twice, and all < 9
+    /// ## Returns
+    ///  true if no number is seen twice, and all < 9
     pub fn test_row(&self, row: usize) -> bool {
         let mut tests = [false; 9];
         for column in 0..9 as usize {
@@ -149,11 +152,11 @@ impl Board {
 
     /// Method to test a given column for if it is correct
     ///
-    /// # Arguments
+    /// ## Arguments
     ///
     /// * column - The column to test
     ///
-    /// # Return
+    /// ## Return
     ///
     /// true if no number is seen twice, and all < 9
     pub fn test_column(&self, column: usize) -> bool {
@@ -175,15 +178,16 @@ impl Board {
 
     /// Method to test a square for if it is correct
     ///
-    /// # Arguments
+    /// ## Arguments
     ///
-    /// * square - is  the square to test 
+    /// * square - is  the square to test
     /// [
     ///     0, 1, 2,
     ///     3, 4, 5,
     ///     6, 7, 8
     /// ]
-    /// @return true if no number is seen twice, and all < 9
+    /// ## Returns
+    /// true if no number is seen twice, and all < 9
     pub fn test_square(&self, square: usize) -> bool {
         let mut tests = [false; 9];
         for position in 0..9 {
@@ -241,9 +245,15 @@ mod board_test {
         let inner_info_9 = [8, 6, 7, 2, 0, 1, 5, 3, 4];
 
         let info = [
-            inner_info_1, inner_info_2, inner_info_3,
-            inner_info_4, inner_info_5, inner_info_6,
-            inner_info_7, inner_info_8, inner_info_9
+            inner_info_1,
+            inner_info_2,
+            inner_info_3,
+            inner_info_4,
+            inner_info_5,
+            inner_info_6,
+            inner_info_7,
+            inner_info_8,
+            inner_info_9,
         ];
         Board::with_squares(info)
     }
@@ -260,9 +270,15 @@ mod board_test {
         let inner_info_9 = [1, 1, 1, 1, 1, 1, 1, 1, 1];
 
         let info = [
-            inner_info_1, inner_info_2, inner_info_3,
-            inner_info_4, inner_info_5, inner_info_6,
-            inner_info_7, inner_info_8, inner_info_9
+            inner_info_1,
+            inner_info_2,
+            inner_info_3,
+            inner_info_4,
+            inner_info_5,
+            inner_info_6,
+            inner_info_7,
+            inner_info_8,
+            inner_info_9,
         ];
         Board::with_squares(info)
     }
