@@ -205,15 +205,15 @@ mod board_test {
     }
 
     fn get_board_with_false_values() -> Board {
-        let inner_info_1 = vec![0, 1, 2, 3, 4, 5, 6, 7, 8];
-        let inner_info_2 = vec![0, 1, 2, 3, 4, 5, 6, 7, 8];
-        let inner_info_3 = vec![0, 1, 2, 3, 4, 5, 6, 7, 8];
-        let inner_info_4 = vec![0, 1, 2, 3, 4, 5, 6, 7, 8];
-        let inner_info_5 = vec![0, 1, 2, 3, 4, 5, 6, 7, 8];
-        let inner_info_6 = vec![0, 1, 2, 3, 4, 5, 6, 7, 8];
-        let inner_info_7 = vec![0, 1, 2, 3, 4, 5, 6, 7, 8];
-        let inner_info_8 = vec![0, 1, 2, 3, 4, 5, 6, 7, 8];
-        let inner_info_9 = vec![0, 1, 2, 3, 4, 5, 6, 7, 8];
+        let inner_info_1 = vec![1, 1, 1, 1, 1, 1, 1, 1, 1];
+        let inner_info_2 = vec![1, 1, 1, 1, 1, 1, 1, 1, 1];
+        let inner_info_3 = vec![1, 1, 1, 1, 1, 1, 1, 1, 1];
+        let inner_info_4 = vec![1, 1, 1, 1, 1, 1, 1, 1, 1];
+        let inner_info_5 = vec![1, 1, 1, 1, 1, 1, 1, 1, 1];
+        let inner_info_6 = vec![1, 1, 1, 1, 1, 1, 1, 1, 1];
+        let inner_info_7 = vec![1, 1, 1, 1, 1, 1, 1, 1, 1];
+        let inner_info_8 = vec![1, 1, 1, 1, 1, 1, 1, 1, 1];
+        let inner_info_9 = vec![1, 1, 1, 1, 1, 1, 1, 1, 1];
 
         let info = vec![
             inner_info_1, inner_info_2, inner_info_3,
@@ -283,6 +283,10 @@ mod board_test {
         let board = get_board_with_values();
 
         assert!(board.test_column(0));
+
+        let board = get_board_with_false_values();
+
+        assert!(!board.test_column(0));
     }
 
     #[test]
