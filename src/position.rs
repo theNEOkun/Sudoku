@@ -1,6 +1,6 @@
 use crate::board::get_index;
 
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Copy)]
 pub struct Position {
     pub x: usize,
     pub y: usize,
@@ -17,7 +17,7 @@ impl Position {
         Self {
             x,
             y,
-            index: get_index(x, y),
+            index: (x, y), //get_index(x, y),
             value: None,
         }
     }
@@ -60,6 +60,12 @@ impl Position {
     /// @param value is the value to set the position to
     pub fn set_value(&mut self, value: u8) {
         self.value = Some(value);
+    }
+}
+
+impl std::fmt::Debug for Position {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "(x: {}, y:{}): {:?}", self.x, self.y, self.value)
     }
 }
 

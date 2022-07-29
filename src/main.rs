@@ -1,7 +1,10 @@
 mod board;
 mod position;
 
+use board::Board;
+
 #[deny(clippy::pedantic)]
 fn main() {
-    println!("Hello, world!");
+    let board = Board::new_empty();
+    println!("{board:?}");
 }

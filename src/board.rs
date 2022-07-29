@@ -63,8 +63,8 @@ impl Board {
         let mut positions = [[Position::default(); 9]; 9];
         for y in 0..9 {
             for x in 0..9 {
-                let (first, second) = get_index(x, y);
-                positions[first][second] = Position::new(x, y);
+                //let (first, second) = get_index(x, y);
+                positions[y][x] = Position::new(x, y);
             }
         }
         Self {
@@ -81,9 +81,10 @@ impl Board {
     pub fn with_squares(info: [[u8; 9]; 9]) -> Self {
         let mut positions = [[Position::default(); 9]; 9];
 
-        for (o_index, outer_each) in info.iter().enumerate() {
-            for (i_index, inner_each) in outer_each.iter().enumerate() {
-                positions[o_index][i_index].reset(i_index, o_index, *inner_each);
+        for (first, outer_each) in info.iter().enumerate() {
+            for (second, inner_each) in outer_each.iter().enumerate() {
+                let (first, second) = get_index(second, first);
+                positions[first][second].reset(second, first, *inner_each);
             }
         }
 
@@ -101,9 +102,8 @@ impl Board {
     pub fn with_rows(info: [[u8; 9]; 9]) -> Self {
         let mut positions = [[Position::default(); 9]; 9];
 
-        for (o_index, outer_each) in info.iter().enumerate() {
-            for (i_index, inner_each) in outer_each.iter().enumerate() {
-                let (first, second) = get_index(i_index, o_index);
+        for (first, outer_each) in info.iter().enumerate() {
+            for (second, inner_each) in outer_each.iter().enumerate() {
                 positions[first][second].reset(first, second, *inner_each);
             }
         }
@@ -210,6 +210,16 @@ impl Board {
     }
 }
 
+impl std::fmt::Debug for Board {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let mut output = String::from("");
+        for each in self.positions.iter() {
+            output += &format!("{:?}", each);
+        }
+        write!(f, "{:?}", output)
+    }
+}
+
 impl std::ops::Index<Position> for Board {
     type Output = Position;
 
@@ -223,8 +233,8 @@ impl std::ops::Index<(usize, usize)> for Board {
     type Output = Position;
 
     /// Indexes the underlying structure with a tuple of (x, y)
-    fn index(&self, index: (usize, usize)) -> &Self::Output {
-        let (first, second) = get_index(index.1, index.0);
+    fn index(&self, (first, second): (usize, usize)) -> &Self::Output {
+        //let (first, second) = get_index(second, first);
         &self.positions[first][second]
     }
 }
@@ -259,7 +269,7 @@ mod board_test {
             inner_info_8,
             inner_info_9,
         ];
-        Board::with_squares(info)
+        Board::with_rows(info)
     }
 
     fn get_board_with_false_values() -> Board {
