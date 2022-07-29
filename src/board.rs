@@ -112,7 +112,7 @@ impl Board {
     /// @param column is the column to test
     pub fn test_column(&self, column: usize) -> bool {
         let mut tests = [false; 9];
-        for row in 0..9 as usize {
+        for row in 0..9 {
             let pos = self[(row, column)];
             if let Some(value) = pos.get_value() {
                 if !tests[value as usize] {
@@ -129,7 +129,7 @@ impl Board {
 
     pub fn test_square(&self, square: usize) -> bool {
         let mut tests = [false; 9];
-        for position in 0..9 as usize {
+        for position in 0..9 {
             let pos = self.positions[square][position];
             if let Some(value) = pos.get_value() {
                 if !tests[value as usize] {
@@ -173,9 +173,9 @@ mod board_test {
     }
 
     fn get_board_with_values() -> Board {
-        let inner_info_1 = vec![1, 2, 3, 4, 5, 6, 7, 8, 9];
-        let inner_info_2 = vec![4, 5, 6, 7, 8, 9, 1, 2, 3];
-        let inner_info_3 = vec![7, 8, 9, 1, 2, 3, 4, 5, 6];
+        let inner_info_1 = vec![0, 1, 2, 3, 4, 5, 6, 7, 8];
+        let inner_info_2 = vec![3, 4, 5, 6, 7, 8, 0, 1, 2];
+        let inner_info_3 = vec![6, 7, 8, 0, 1, 2, 3, 4, 5];
         let info = vec![inner_info_1, inner_info_2, inner_info_3];
         Board::new_with_info(info)
     }
@@ -192,25 +192,25 @@ mod board_test {
     fn test_row_manual() {
         let board = get_board_with_values();
 
-        assert_eq!(Some(1), board[(0, 0)].get_value());
-        assert_eq!(Some(2), board[(0, 1)].get_value());
-        assert_eq!(Some(3), board[(0, 2)].get_value());
-        assert_eq!(Some(4), board[(0, 3)].get_value());
-        assert_eq!(Some(5), board[(0, 4)].get_value());
-        assert_eq!(Some(6), board[(0, 5)].get_value());
-        assert_eq!(Some(7), board[(0, 6)].get_value());
-        assert_eq!(Some(8), board[(0, 7)].get_value());
-        assert_eq!(Some(9), board[(0, 8)].get_value());
+        assert_eq!(Some(0), board[(0, 0)].get_value());
+        assert_eq!(Some(1), board[(0, 1)].get_value());
+        assert_eq!(Some(2), board[(0, 2)].get_value());
+        assert_eq!(Some(3), board[(0, 3)].get_value());
+        assert_eq!(Some(4), board[(0, 4)].get_value());
+        assert_eq!(Some(5), board[(0, 5)].get_value());
+        assert_eq!(Some(6), board[(0, 6)].get_value());
+        assert_eq!(Some(7), board[(0, 7)].get_value());
+        assert_eq!(Some(8), board[(0, 8)].get_value());
 
-        assert_eq!(Some(4), board[(1, 0)].get_value());
-        assert_eq!(Some(5), board[(1, 1)].get_value());
-        assert_eq!(Some(6), board[(1, 2)].get_value());
-        assert_eq!(Some(7), board[(1, 3)].get_value());
-        assert_eq!(Some(8), board[(1, 4)].get_value());
-        assert_eq!(Some(9), board[(1, 5)].get_value());
-        assert_eq!(Some(1), board[(1, 6)].get_value());
-        assert_eq!(Some(2), board[(1, 7)].get_value());
-        assert_eq!(Some(3), board[(1, 8)].get_value());
+        assert_eq!(Some(3), board[(1, 0)].get_value());
+        assert_eq!(Some(4), board[(1, 1)].get_value());
+        assert_eq!(Some(5), board[(1, 2)].get_value());
+        assert_eq!(Some(6), board[(1, 3)].get_value());
+        assert_eq!(Some(7), board[(1, 4)].get_value());
+        assert_eq!(Some(8), board[(1, 5)].get_value());
+        assert_eq!(Some(0), board[(1, 6)].get_value());
+        assert_eq!(Some(1), board[(1, 7)].get_value());
+        assert_eq!(Some(2), board[(1, 8)].get_value());
     }
 
     #[test]
