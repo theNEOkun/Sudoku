@@ -87,6 +87,19 @@ impl Board {
         }
     }
 
+    /// Method to test the whole board
+    ///
+    /// @return true if the board is correct, else false
+    pub fn test_board(&self) -> bool {
+        let mut returnval = true;
+        for each in 0..9 {
+            returnval &= self.test_row(each);
+            returnval &= self.test_column(each);
+            returnval &= self.test_square(each);
+        }
+        returnval
+    }
+
     /// Method to test a given row for if it is correct
     ///
     /// @param row is the row to test
@@ -176,7 +189,37 @@ mod board_test {
         let inner_info_1 = vec![0, 1, 2, 3, 4, 5, 6, 7, 8];
         let inner_info_2 = vec![3, 4, 5, 6, 7, 8, 0, 1, 2];
         let inner_info_3 = vec![6, 7, 8, 0, 1, 2, 3, 4, 5];
-        let info = vec![inner_info_1, inner_info_2, inner_info_3];
+        let inner_info_4 = vec![1, 2, 0, 4, 5, 3, 7, 8, 6];
+        let inner_info_5 = vec![4, 5, 3, 7, 8, 6, 1, 2, 0];
+        let inner_info_6 = vec![7, 8, 6, 1, 2, 0, 4, 5, 3];
+        let inner_info_7 = vec![2, 0, 1, 5, 3, 4, 8, 6, 7];
+        let inner_info_8 = vec![5, 3, 4, 8, 6, 7, 2, 0, 1];
+        let inner_info_9 = vec![8, 6, 7, 2, 0, 1, 5, 3, 4];
+
+        let info = vec![
+            inner_info_1, inner_info_2, inner_info_3,
+            inner_info_4, inner_info_5, inner_info_6,
+            inner_info_7, inner_info_8, inner_info_9
+        ];
+        Board::new_with_info(info)
+    }
+
+    fn get_board_with_false_values() -> Board {
+        let inner_info_1 = vec![0, 1, 2, 3, 4, 5, 6, 7, 8];
+        let inner_info_2 = vec![0, 1, 2, 3, 4, 5, 6, 7, 8];
+        let inner_info_3 = vec![0, 1, 2, 3, 4, 5, 6, 7, 8];
+        let inner_info_4 = vec![0, 1, 2, 3, 4, 5, 6, 7, 8];
+        let inner_info_5 = vec![0, 1, 2, 3, 4, 5, 6, 7, 8];
+        let inner_info_6 = vec![0, 1, 2, 3, 4, 5, 6, 7, 8];
+        let inner_info_7 = vec![0, 1, 2, 3, 4, 5, 6, 7, 8];
+        let inner_info_8 = vec![0, 1, 2, 3, 4, 5, 6, 7, 8];
+        let inner_info_9 = vec![0, 1, 2, 3, 4, 5, 6, 7, 8];
+
+        let info = vec![
+            inner_info_1, inner_info_2, inner_info_3,
+            inner_info_4, inner_info_5, inner_info_6,
+            inner_info_7, inner_info_8, inner_info_9
+        ];
         Board::new_with_info(info)
     }
 
@@ -214,10 +257,25 @@ mod board_test {
     }
 
     #[test]
+    fn test_board() {
+        let board = get_board_with_values();
+
+        assert!(board.test_board());
+
+        let board = get_board_with_false_values();
+
+        assert!(!board.test_board());
+    }
+
+    #[test]
     fn test_row() {
         let board = get_board_with_values();
 
         assert!(board.test_row(0));
+
+        let board = get_board_with_false_values();
+
+        assert!(!board.test_row(0));
     }
 
     #[test]
