@@ -65,6 +65,10 @@ impl Board {
         }
     }
 
+    /// Used to create and fill a board with values
+    ///
+    /// @param info is a vec of vec with u8s to fill each position in the board. 
+    ///         inner vecs represent a square
     pub fn new_with_info(info: Vec<Vec<u8>>) -> Self {
         let mut positions = [[Position::default();9 ]; 9];
         
@@ -140,6 +144,13 @@ impl Board {
         true
     }
 
+    /// Method to test a square for if it is correct
+    ///
+    /// @param square is  the square to test [
+    /// 0, 1, 2
+    /// 3, 4, 5
+    /// 6, 7, 8
+    /// ]
     pub fn test_square(&self, square: usize) -> bool {
         let mut tests = [false; 9];
         for position in 0..9 {
