@@ -67,26 +67,21 @@ fn removal(board: &mut Board) {
     vec.shuffle(&mut thread_rng());
 
     for each in vec[0..empties].iter() {
-        board[(each/SIDE, each%SIDE)].set_dir(None);
+        board[(each/SIDE, each%SIDE)] = None;
     }
 }
 
-fn create_empty_array() -> [[Position; SIDE]; SIDE] {
-    let mut vec = [[Position::default(); SIDE]; SIDE];
-    for first in 0..SIDE {
-        for second in 0..SIDE {
-            vec[first][second].reset_none(first, second);
-        }
-    }
+fn create_empty_array() -> [[Option<usize>; SIDE]; SIDE] {
+    let mut vec = [[None; SIDE]; SIDE];
     vec
 }
 
 pub struct Board {
     /// is the matrix of which the sudoku-square is
     /// [position](../position/struct.Position.html)
-    filled: Box<[[Position; SIDE]; SIDE]>,
-    pub empty: Box<[[Position; SIDE]; SIDE]>,
-    pub tries: Box<[[Position; SIDE]; SIDE]>,
+    filled: Box<[[Option<usize>; SIDE]; SIDE]>,
+    pub empty: Box<[[Option<usize>; SIDE]; SIDE]>,
+    pub tries: Box<[[Option<usize>; SIDE]; SIDE]>,
 }
 
 const NUMBERS: [usize; 9] = [0, 1, 2, 3, 4, 5, 6, 7, 8];
@@ -99,7 +94,7 @@ impl Board {
     ///
     /// a board with all positions uniquely filled
     pub fn new() -> Self {
-        let mut positions = [[Position::default(); SIDE]; SIDE];
+        let mut positions = [[None; SIDE]; SIDE];
 
         let mut rng = thread_rng();
 
@@ -113,7 +108,7 @@ impl Board {
 
         for r in rows.iter() {
             for c in cols.iter() {
-                positions[*r][*c].reset(*c, *r, nums[pattern(*r, *c)]);
+                positions[*r][*c] = Some(nums[pattern(*r, *c)]);
             }
         }
 
@@ -143,15 +138,15 @@ impl Board {
     /// * info -is a vec of vec with usizes to fill each position in the board.
     ///         inner vecs represent a square
     pub fn with_squares(info: [[usize; SIDE]; SIDE]) -> Self {
-        let mut filled = [[Position::default(); SIDE]; SIDE];
+        let mut filled = [[None; SIDE]; SIDE];
 
         for (first, outer_each) in info.iter().enumerate() {
             for (second, inner_each) in outer_each.iter().enumerate() {
                 let (first, second) = get_index(second, first);
                 if *inner_each < 9 {
-                    filled[first][second].reset(first, second, *inner_each);
+                    filled[first][second] = Some(*inner_each);
                 } else {
-                    filled[first][second].reset_none(first, second);
+                    filled[first][second] = None;
                 }
             }
         }
@@ -164,10 +159,10 @@ impl Board {
     }
 
     pub fn add_number(&mut self, x: usize, y: usize, num: usize) -> bool {
-        if let None = self[(x, y)].get_value() {
+        if let None = self[(x, y)] {
             let square = get_square(x, y);
             if self.num_in_row(y, num) && self.num_in_column(x, num) && self.num_in_square(square, num) {
-                self.tries[y][x].set_value(num);
+                self.tries[y][x] = Some(num);
                 true
             } else {
                 false
@@ -184,14 +179,14 @@ impl Board {
     /// * info -is a vec of vec with usizes to fill each position in the board.
     ///         inner vecs represent a square
     pub fn with_rows(info: [[usize; SIDE]; SIDE]) -> Self {
-        let mut filled = [[Position::default(); SIDE]; SIDE];
+        let mut filled = [[None; SIDE]; SIDE];
 
         for (first, outer_each) in info.iter().enumerate() {
             for (second, inner_each) in outer_each.iter().enumerate() {
                 if *inner_each < 9 {
-                    filled[first][second].reset(first, second, *inner_each);
+                    filled[first][second] = Some(*inner_each);
                 } else {
-                    filled[first][second].reset_none(first, second);
+                    filled[first][second] = None;
                 }
             }
         }
@@ -228,7 +223,7 @@ impl Board {
         let mut tests = 0b000000000;
         for column in 0..SIDE {
             let pos = self[(row, column)];
-            if let Some(value) = pos.get_value() {
+            if let Some(value) = pos {
                 let pos = 1 << value;
                 if !(((tests & pos) >> value) == 1) {
                     tests |= pos;
@@ -255,7 +250,7 @@ impl Board {
     pub fn num_in_row(&self, row: usize, num: usize) -> bool {
         for column in 0..SIDE {
             let pos = self[(row, column)];
-            if let Some(val) = pos.get_value() {
+            if let Some(val) = pos {
                 if val == num {
                     return false
                 }
@@ -277,7 +272,7 @@ impl Board {
         let mut tests = 0b000000000;
         for row in 0..SIDE {
             let pos = self[(row, column)];
-            if let Some(value) = pos.get_value() {
+            if let Some(value) = pos {
                 let pos = 1 << value;
                 if !(((tests & pos) >> value) == 1) {
                     tests |= pos;
@@ -304,7 +299,7 @@ impl Board {
     pub fn num_in_column(&self, column: usize, num: usize) -> bool {
         for row in 0..SIDE {
             let pos = self[(row, column)];
-            if let Some(val) = pos.get_value() {
+            if let Some(val) = pos {
                 if val == num {
                     return false
                 }
@@ -330,7 +325,7 @@ impl Board {
         for position in 0..SIDE {
             let (first, second) = get_index(square, position);
             let pos = self.filled[first][second];
-            if let Some(value) = pos.get_value() {
+            if let Some(value) = pos {
                 let pos = 1 << value;
                 if !(((tests & pos) >> value) == 1) {
                     tests |= pos;
@@ -358,7 +353,7 @@ impl Board {
         for position in 0..SIDE {
             let (first, second) = get_index(square, position);
             let pos = self.filled[first][second];
-            if let Some(value) = pos.get_value() {
+            if let Some(value) = pos {
                 if value == num {
                     return false;
                 }
@@ -372,7 +367,7 @@ impl std::fmt::Debug for Board {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         for each in self.filled.iter() {
             for each in each {
-                if let Some(val) = each.get_value() {
+                if let Some(val) = each {
                     write!(f, "|{}|", val + 1)?;
                 } else {
                     write!(f, "| |")?;
@@ -383,7 +378,7 @@ impl std::fmt::Debug for Board {
         write!(f, "\n")?;
         for each in self.empty.iter() {
             for each in each {
-                if let Some(val) = each.get_value() {
+                if let Some(val) = each {
                     write!(f, "|{}|", val + 1)?;
                 } else {
                     write!(f, "| |")?;
@@ -399,7 +394,7 @@ impl std::fmt::Display for Board {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         for each in self.empty.iter() {
             for each in each {
-                if let Some(val) = each.get_value() {
+                if let Some(val) = each {
                     write!(f, "|{}|", val + 1)?;
                 } else {
                     write!(f, "| |")?;
@@ -412,7 +407,7 @@ impl std::fmt::Display for Board {
 }
 
 impl std::ops::Index<Position> for Board {
-    type Output = Position;
+    type Output = Option<usize>;
 
     /// Indexes the underlying structure with an index
     fn index(&self, index: Position) -> &Self::Output {
@@ -428,7 +423,7 @@ impl std::ops::IndexMut<Position> for Board {
 }
 
 impl std::ops::Index<(usize, usize)> for Board {
-    type Output = Position;
+    type Output = Option<usize>;
 
     /// Indexes the underlying structure with a tuple of (x, y)
     fn index(&self, (first, second): (usize, usize)) -> &Self::Output {
@@ -576,51 +571,51 @@ mod board_test {
         let board = Board::new_empty();
 
         let position = Position::new(2, 2);
-        assert_eq!(board[position].get_value(), None);
+        assert_eq!(board[position], None);
     }
 
     #[test]
     fn test_random() {
         let board = Board::new();
 
-        assert!(board.filled[2][2].get_value().is_some());
+        assert!(board.filled[2][2].is_some());
     }
 
     #[test]
     fn test_row_manual() {
         let board = get_board_with_values();
 
-        assert_eq!(Some(0), board[(0, 0)].get_value());
-        assert_eq!(Some(1), board[(0, 1)].get_value());
-        assert_eq!(Some(2), board[(0, 2)].get_value());
-        assert_eq!(Some(3), board[(0, 3)].get_value());
-        assert_eq!(Some(4), board[(0, 4)].get_value());
-        assert_eq!(Some(5), board[(0, 5)].get_value());
-        assert_eq!(Some(6), board[(0, 6)].get_value());
-        assert_eq!(Some(7), board[(0, 7)].get_value());
-        assert_eq!(Some(8), board[(0, 8)].get_value());
+        assert_eq!(Some(0), board[(0, 0)]);
+        assert_eq!(Some(1), board[(0, 1)]);
+        assert_eq!(Some(2), board[(0, 2)]);
+        assert_eq!(Some(3), board[(0, 3)]);
+        assert_eq!(Some(4), board[(0, 4)]);
+        assert_eq!(Some(5), board[(0, 5)]);
+        assert_eq!(Some(6), board[(0, 6)]);
+        assert_eq!(Some(7), board[(0, 7)]);
+        assert_eq!(Some(8), board[(0, 8)]);
 
-        assert_eq!(Some(3), board[(1, 0)].get_value());
-        assert_eq!(Some(4), board[(1, 1)].get_value());
-        assert_eq!(Some(5), board[(1, 2)].get_value());
-        assert_eq!(Some(6), board[(1, 3)].get_value());
-        assert_eq!(Some(7), board[(1, 4)].get_value());
-        assert_eq!(Some(8), board[(1, 5)].get_value());
-        assert_eq!(Some(0), board[(1, 6)].get_value());
-        assert_eq!(Some(1), board[(1, 7)].get_value());
-        assert_eq!(Some(2), board[(1, 8)].get_value());
+        assert_eq!(Some(3), board[(1, 0)]);
+        assert_eq!(Some(4), board[(1, 1)]);
+        assert_eq!(Some(5), board[(1, 2)]);
+        assert_eq!(Some(6), board[(1, 3)]);
+        assert_eq!(Some(7), board[(1, 4)]);
+        assert_eq!(Some(8), board[(1, 5)]);
+        assert_eq!(Some(0), board[(1, 6)]);
+        assert_eq!(Some(1), board[(1, 7)]);
+        assert_eq!(Some(2), board[(1, 8)]);
 
         let board = get_board_with_false_values();
 
-        assert_eq!(Some(1), board[(0, 0)].get_value());
-        assert_eq!(Some(1), board[(0, 1)].get_value());
-        assert_eq!(Some(1), board[(0, 2)].get_value());
-        assert_eq!(Some(1), board[(0, 3)].get_value());
-        assert_eq!(Some(1), board[(0, 4)].get_value());
-        assert_eq!(Some(1), board[(0, 5)].get_value());
-        assert_eq!(Some(1), board[(0, 6)].get_value());
-        assert_eq!(Some(1), board[(0, 7)].get_value());
-        assert_eq!(Some(1), board[(0, 8)].get_value());
+        assert_eq!(Some(1), board[(0, 0)]);
+        assert_eq!(Some(1), board[(0, 1)]);
+        assert_eq!(Some(1), board[(0, 2)]);
+        assert_eq!(Some(1), board[(0, 3)]);
+        assert_eq!(Some(1), board[(0, 4)]);
+        assert_eq!(Some(1), board[(0, 5)]);
+        assert_eq!(Some(1), board[(0, 6)]);
+        assert_eq!(Some(1), board[(0, 7)]);
+        assert_eq!(Some(1), board[(0, 8)]);
     }
 
     #[test]

@@ -20,7 +20,54 @@ use tui::{
 
 struct App {
     state: TableState,
-    items: Board,
+    board: Board,
+    active_column: usize,
+    active_row: usize,
+}
+
+impl App {
+    pub fn new() -> Self {
+        Self {
+            state: TableState::default(),
+            board: Board::new(),
+            active_column: 0,
+            active_row: 0,
+        }
+    }
+
+    fn up(&mut self) {
+        if let Some(active_row) = self.active_row.checked_sub(1) {
+            self.active_row = active_row;
+        }
+    }
+
+    fn down(&mut self) {
+        self.active_row += usize::from(self.active_row < 9);
+    } 
+
+    fn left(&mut self) {
+        if let Some(active_column) = self.active_column.checked_sub(1) {
+            self.active_column = active_column;
+        }
+    }
+
+    fn right(&mut self) {
+        self.active_column += usize::from(self.active_column < 9);
+    }
+
+    pub fn select(&mut self) {
+        let i = match self.state.selected() {
+            Some(i) => {
+                if i >= self.board.empty.len() - 1 {
+                    0
+                } else {
+                    i + 1
+                }
+            }
+            None => 0,
+        };
+        self.state.select(Some(i));
+    }
 }
 
 fn ui<B: Backend>(f: &mut Frame<B>, app: &mut App) {
@@ -29,9 +76,9 @@ fn ui<B: Backend>(f: &mut Frame<B>, app: &mut App) {
         .margin(5)
         .split(f.size());
 
-    let rows = app.items.empty.iter().map(|item| {
+    let rows = app.board.empty.iter().map(|item| {
         let cells = item.iter().map(|c| {
-            Cell::from(if let Some(value) = c.get_value() {
+            Cell::from(if let Some(value) = c {
                 value.to_string()
             } else {
                 String::from(" ")
@@ -59,19 +106,28 @@ fn ui<B: Backend>(f: &mut Frame<B>, app: &mut App) {
     f.render_stateful_widget(t, rects[0], &mut app.state);
 }
 
-fn run_app<B: Backend>(terminal: &mut Terminal<B>, mut board: App) -> io::Result<()> {
+fn run_app<B: Backend>(terminal: &mut Terminal<B>, mut app: App) -> io::Result<()> {
     loop {
-        terminal.draw(|f| ui(f, &mut board));
+        terminal.draw(|f| ui(f, &mut app))?;
 
-        if let Event::Mouse(m) = event::read()? {
-            match m.kind {
-                MouseEventKind::Down(button) => {
-                    match button => {
-                        MouseButton::Left => {
-                            println!("@ {}, {}", m.column, m.row);
-                        }
-                        _ => {}
-                    }
+        if let Event::Key(key) = event::read()? {
+            match key.code {
+                KeyCode::Char('q') => {
+                    return Ok(())
+                },
+                KeyCode::Left => {
+                    app.left();
+                },
+                KeyCode::Right => {
+                    app.right();
+                },
+                KeyCode::Up => {
+                    app.up();
+                },
+                KeyCode::Down => {
+                    app.down();
+                },
+                KeyCode::Char(c) => {
                 }
                 _ => {}
             }
@@ -85,10 +141,7 @@ fn main() -> Result<(), Box<dyn Error>> {
     let mut stdout = io::stdout();
     execute!(stdout, EnterAlternateScreen, EnableMouseCapture).unwrap();
 
-    let app = App {
-        state: TableState::default(),
-        items: Board::new(),
-    };
+    let app = App::new();
 
     let backend = CrosstermBackend::new(stdout);
     let mut terminal = Terminal::new(backend).unwrap();
