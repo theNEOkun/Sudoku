@@ -5,6 +5,6 @@ use board::Board;
 
 #[deny(clippy::pedantic)]
 fn main() {
-    let board = Board::new_empty();
+    let board = Board::new();
     println!("{board}");
 }

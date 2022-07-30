@@ -1,10 +1,5 @@
 use crate::position::Position;
-
-pub struct Board {
-    /// is the matrix of which the sudoku-square is
-    /// [position](../position/struct.Position.html)
-    positions: Box<[[Position; 9]; 9]>,
-}
+use rand::{seq::SliceRandom, thread_rng};
 
 /// Gets the square based on the x and y
 ///
@@ -57,10 +52,52 @@ pub fn get_index(x: usize, y: usize) -> (usize, usize) {
     (first_array, second_array)
 }
 
-impl Board {
+fn shuffle(mut vec: Vec<u8>) -> Vec<u8> {
+    let mut rng = thread_rng();
+    vec.shuffle(&mut rng);
+    vec
+}
 
+fn create_list() -> Vec<u8> {
+    let list = (0..9).collect::<Vec<u8>>();
+    let mut retval: Vec<u8> = vec![];
+    
+    for row in shuffle(list.clone()) {
+        for g in shuffle(list.clone()) {
+            retval.push(g * 3 + row);
+        }
+    }
+
+    retval
+}
+
+fn pattern(r: u8, c: u8) -> u8 {
+    (3 * (r % 3) + r / (3 * 3) + c) % 3
+}
+
+pub struct Board {
+    /// is the matrix of which the sudoku-square is
+    /// [position](../position/struct.Position.html)
+    positions: Box<[[Position; 9]; 9]>,
+}
+
+impl Board {
     pub fn new() -> Self {
         let mut positions = [[Position::default(); 9]; 9];
+    
+        let rows = create_list();
+        let cols = create_list();
+
+
+        let nums = shuffle((1..82).collect::<Vec<u8>>().try_into().unwrap());
+        for r in rows {
+            for c in &cols {
+                let x = c / 9;
+                let y = r % 9;
+                positions[y as usize][x as usize].reset(r as usize, *c as usize, nums[pattern(r, *c) as usize]);
+            }
+        }
+
         Self {
             positions: Box::new(positions),
         }
