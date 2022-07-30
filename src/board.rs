@@ -219,6 +219,16 @@ impl Board {
         0b111111111 == tests
     }
 
+    /// Tests if a number is already in the row
+    ///
+    /// ## Arguments
+    ///
+    /// * row - the row to test
+    /// * num - the number to test in the row
+    ///
+    /// ## Returns
+    ///
+    /// Return true if the number is NOT in the row, else false
     pub fn num_in_row(&self, row: usize, num: usize) -> bool {
         for column in 0..SIDE {
             let pos = self[(row, column)];
@@ -258,6 +268,16 @@ impl Board {
         0b111111111 == tests
     }
 
+    /// Tests if a number is already in the column
+    ///
+    /// ## Arguments
+    ///
+    /// * column - the column to test
+    /// * num - the number to test in the row
+    ///
+    /// ## Returns
+    ///
+    /// Return true if the number is NOT in the column, else false
     pub fn num_in_column(&self, column: usize, num: usize) -> bool {
         for row in 0..SIDE {
             let pos = self[(row, column)];
@@ -301,6 +321,16 @@ impl Board {
         0b111111111 == tests
     }
 
+    /// Tests if a number is already in the square
+    ///
+    /// ## Arguments
+    ///
+    /// * square - the square to test
+    /// * num - the number to test in the row
+    ///
+    /// ## Returns
+    ///
+    /// Return true if the number is NOT in the square, else false
     pub fn num_in_square(&self, square: usize, num: usize) -> bool {
         for position in 0..SIDE {
             let (first, second) = get_index(square, position);
@@ -426,6 +456,31 @@ mod board_test {
         Board::with_rows(info)
     }
 
+    fn get_empty_board() -> Board {
+        let inner_info_1 = [7, 3, 5, 9, 10, 10, 8, 10, 10];
+        let inner_info_2 = [9, 10, 10, 10, 6, 10, 10, 10, 10];
+        let inner_info_3 = [8, 10, 10, 10, 10, 10, 10, 1, 10];
+        let inner_info_4 = [10, 10, 9, 10, 10, 10, 10, 4, 10];
+        let inner_info_5 = [10, 10, 8, 10, 10, 10, 10, 10, 10];
+        let inner_info_6 = [10, 10, 10, 10, 10, 9, 10, 10, 10];
+        let inner_info_7 = [10, 9, 10, 10, 10, 6, 10, 10, 3];
+        let inner_info_8 = [10, 8, 10, 10, 10, 3, 10, 10, 10];
+        let inner_info_9 = [4, 7, 3, 10, 10, 10, 2 ,10, 6];
+
+        let info = [
+            inner_info_1,
+            inner_info_2,
+            inner_info_3,
+            inner_info_4,
+            inner_info_5,
+            inner_info_6,
+            inner_info_7,
+            inner_info_8,
+            inner_info_9,
+        ];
+        Board::with_rows(info)
+    }
+
     fn get_board_with_false_values() -> Board {
         let inner_info_1 = [1, 1, 1, 1, 1, 1, 1, 1, 1];
         let inner_info_2 = [1, 1, 1, 1, 1, 1, 1, 1, 1];
@@ -449,6 +504,39 @@ mod board_test {
             inner_info_9,
         ];
         Board::with_squares(info)
+    }
+
+    #[test]
+    fn test_number_rows() {
+        let board = get_empty_board();
+
+        assert!(board.num_in_row(0, 1));
+
+        assert!(board.num_in_row(1, 1));
+
+        assert!(board.num_in_row(8, 1));
+    }
+
+    #[test]
+    fn test_number_columns() {
+        let board = get_empty_board();
+
+        assert!(board.num_in_column(0, 1));
+
+        assert!(board.num_in_column(1, 1));
+
+        assert!(board.num_in_column(8, 1));
+    }
+
+    #[test]
+    fn test_number_squares() {
+        let board = get_empty_board();
+
+        assert!(board.num_in_square(0, 1));
+
+        assert!(board.num_in_square(1, 1));
+
+        assert!(board.num_in_square(8, 1));
     }
 
     #[test]
