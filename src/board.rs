@@ -59,6 +59,7 @@ fn pattern(r: usize, c: usize) -> usize {
     (BASE * (r % BASE) + r / BASE + c) % SIDE
 }
 
+/// Used to remove values from the board
 fn removal(board: &mut Board) {
     let squares = SIDE * SIDE;
     let empties = (squares * 3) / 4;
@@ -140,7 +141,11 @@ impl Board {
         for (first, outer_each) in info.iter().enumerate() {
             for (second, inner_each) in outer_each.iter().enumerate() {
                 let (first, second) = get_index(second, first);
-                filled[first][second].reset(second, first, *inner_each);
+                if *inner_each < 9 {
+                    filled[first][second].reset(first, second, *inner_each);
+                } else {
+                    filled[first][second].reset_none(first, second);
+                }
             }
         }
 
@@ -161,7 +166,11 @@ impl Board {
 
         for (first, outer_each) in info.iter().enumerate() {
             for (second, inner_each) in outer_each.iter().enumerate() {
-                filled[first][second].reset(first, second, *inner_each);
+                if *inner_each < 9 {
+                    filled[first][second].reset(first, second, *inner_each);
+                } else {
+                    filled[first][second].reset_none(first, second);
+                }
             }
         }
 
@@ -308,12 +317,26 @@ impl Board {
 
 impl std::fmt::Debug for Board {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        let mut output = String::from("");
         for each in self.filled.iter() {
-            output += &format!("{:?}\n", each);
+            for each in each {
+                if let Some(val) = each.get_value() {
+                    write!(f, "|{}|", val + 1)?;
+                } else {
+                    write!(f, "| |")?;
+                }
+            }
+            write!(f, "\n")?;
         }
+        write!(f, "\n")?;
         for each in self.empty.iter() {
-            output += &format!("{:?}\n", each);
+            for each in each {
+                if let Some(val) = each.get_value() {
+                    write!(f, "|{}|", val + 1)?;
+                } else {
+                    write!(f, "| |")?;
+                }
+            }
+            write!(f, "\n")?;
         }
         write!(f, "")
     }
@@ -324,12 +347,12 @@ impl std::fmt::Display for Board {
         for each in self.empty.iter() {
             for each in each {
                 if let Some(val) = each.get_value() {
-                    write!(f, "|{}|", val + 1).unwrap();
+                    write!(f, "|{}|", val + 1)?;
                 } else {
-                    write!(f, "| |").unwrap();
+                    write!(f, "| |")?;
                 }
             }
-            write!(f, "\n").unwrap();
+            write!(f, "\n")?;
         }
         write!(f, "")
     }
