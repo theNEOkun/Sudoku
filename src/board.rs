@@ -1,6 +1,9 @@
 use crate::position::Position;
 use rand::{seq::SliceRandom, thread_rng};
 
+const BASE: usize = 3;
+const SIDE: usize = BASE * BASE;
+
 /// Gets the square based on the x and y
 ///
 /// ## Arguments
@@ -8,8 +11,8 @@ use rand::{seq::SliceRandom, thread_rng};
 /// *s x is the coordinate on the x-axis,
 /// *s y is the coordinate on the y-axis
 fn get_square(x: usize, y: usize) -> usize {
-    if y < 3 {
-        if x < 3 {
+    if y < BASE {
+        if x < BASE {
             0
         } else if x < 6 {
             1
@@ -17,7 +20,7 @@ fn get_square(x: usize, y: usize) -> usize {
             2
         }
     } else if y < 6 {
-        if x < 3 {
+        if x < BASE {
             3
         } else if x < 6 {
             4
@@ -25,7 +28,7 @@ fn get_square(x: usize, y: usize) -> usize {
             5
         }
     } else {
-        if x < 3 {
+        if x < BASE {
             6
         } else if x < 6 {
             7
@@ -46,55 +49,59 @@ fn get_square(x: usize, y: usize) -> usize {
 /// a tuple of (first, second)
 pub fn get_index(x: usize, y: usize) -> (usize, usize) {
     let first_array = get_square(x, y);
-    let x = x % 3;
-    let y = y % 3;
-    let second_array = (y * 3) + x;
+    let x = x % BASE;
+    let y = y % BASE;
+    let second_array = (y * BASE) + x;
     (first_array, second_array)
 }
 
-fn shuffle(mut vec: Vec<u8>) -> Vec<u8> {
+fn shuffle(mut vec: Vec<usize>) -> Vec<usize> {
     let mut rng = thread_rng();
     vec.shuffle(&mut rng);
     vec
 }
 
-fn create_list() -> Vec<u8> {
-    let list = (0..9).collect::<Vec<u8>>();
-    let mut retval: Vec<u8> = vec![];
+fn create_list() -> Vec<usize> {
+    let list = (0..SIDE).collect::<Vec<usize>>();
+    let mut retval: Vec<usize> = vec![];
     
     for row in shuffle(list.clone()) {
         for g in shuffle(list.clone()) {
-            retval.push(g * 3 + row);
+            retval.push(g * BASE + row);
         }
     }
 
     retval
 }
 
-fn pattern(r: u8, c: u8) -> u8 {
-    (3 * (r % 3) + r / (3 * 3) + c) % 3
+fn pattern(r: usize, c: usize) -> usize {
+    (BASE * (r % BASE) + (r / SIDE) + c) % BASE
 }
 
 pub struct Board {
     /// is the matrix of which the sudoku-square is
     /// [position](../position/struct.Position.html)
-    positions: Box<[[Position; 9]; 9]>,
+    positions: Box<[[Position; SIDE]; SIDE]>,
 }
 
 impl Board {
     pub fn new() -> Self {
-        let mut positions = [[Position::default(); 9]; 9];
+        let mut positions = [[Position::default(); SIDE]; SIDE];
     
         let rows = create_list();
         let cols = create_list();
 
+        println!("Rows: {rows:?}");
+        println!("Cols: {cols:?}");
 
-        let nums = shuffle((1..82).collect::<Vec<u8>>().try_into().unwrap());
+        let nums = shuffle((1..82).collect::<Vec<usize>>().try_into().unwrap());
         for r in rows {
             for c in &cols {
-                let x = c / 9;
-                let y = r % 9;
-                positions[y as usize][x as usize].reset(r as usize, *c as usize, nums[pattern(r, *c) as usize]);
+                let x = (c / 9) as usize;
+                let y = (r % 9) as usize;
+                let pattern = pattern(r, *c);
+                println!("pattern: {pattern}");
+                positions[y][x].reset(x, y, nums[pattern as usize]);
             }
         }
 
@@ -121,9 +128,9 @@ impl Board {
     ///
     /// ## Arguments
     ///
-    /// * info - is a vec of vec with u8s to fill each position in the board.
+    /// * info - is a vec of vec with usizes to fill each position in the board.
     ///         inner vecs represent a square
-    pub fn with_squares(info: [[u8; 9]; 9]) -> Self {
+    pub fn with_squares(info: [[usize; 9]; 9]) -> Self {
         let mut positions = [[Position::default(); 9]; 9];
 
         for (first, outer_each) in info.iter().enumerate() {
@@ -142,9 +149,9 @@ impl Board {
     ///
     /// ## Arguments
     ///
-    /// * info - is a vec of vec with u8s to fill each position in the board.
+    /// * info - is a vec of vec with usizes to fill each position in the board.
     ///         inner vecs represent a square
-    pub fn with_rows(info: [[u8; 9]; 9]) -> Self {
+    pub fn with_rows(info: [[usize; 9]; 9]) -> Self {
         let mut positions = [[Position::default(); 9]; 9];
 
         for (first, outer_each) in info.iter().enumerate() {
@@ -181,7 +188,7 @@ impl Board {
     ///  true if no number is seen twice, and all < 9
     pub fn test_row(&self, row: usize) -> bool {
         let mut tests = 0b000000000;
-        for column in 0..9 as usize {
+        for column in 0..SIDE {
             let pos = self[(row, column)];
             if let Some(value) = pos.get_value() {
                 let pos = 1 << value;
@@ -197,6 +204,18 @@ impl Board {
         0b111111111 == tests
     }
 
+    pub fn num_in_row(&self, row: usize, num: usize) -> bool {
+        for column in 0..SIDE {
+            let pos = self[(row, column)];
+            if let Some(val) = pos.get_value() {
+                if val == num {
+                    return false
+                }
+            }
+        }
+        true
+    }
+
     /// Method to test a given column for if it is correct
     ///
     /// ## Arguments
@@ -208,7 +227,7 @@ impl Board {
     /// true if no number is seen twice, and all < 9
     pub fn test_column(&self, column: usize) -> bool {
         let mut tests = 0b000000000;
-        for row in 0..9 {
+        for row in 0..SIDE {
             let pos = self[(row, column)];
             if let Some(value) = pos.get_value() {
                 let pos = 1 << value;
@@ -222,6 +241,18 @@ impl Board {
             }
         }
         0b111111111 == tests
+    }
+
+    pub fn num_in_column(&self, column: usize, num: usize) -> bool {
+        for row in 0..SIDE {
+            let pos = self[(row, column)];
+            if let Some(val) = pos.get_value() {
+                if val == num {
+                    return false
+                }
+            }
+        }
+        true
     }
 
     /// Method to test a square for if it is correct
@@ -238,8 +269,9 @@ impl Board {
     /// true if no number is seen twice, and all < 9
     pub fn test_square(&self, square: usize) -> bool {
         let mut tests = 0b000000000;
-        for position in 0..9 {
-            let pos = self.positions[square][position];
+        for position in 0..SIDE {
+            let (first, second) = get_index(square, position);
+            let pos = self.positions[first][second];
             if let Some(value) = pos.get_value() {
                 let pos = 1 << value;
                 if !(((tests & pos) >> value) == 1) {
@@ -252,6 +284,19 @@ impl Board {
             }
         }
         0b111111111 == tests
+    }
+
+    pub fn num_in_square(&self, square: usize, num: usize) -> bool {
+        for position in 0..SIDE {
+            let (first, second) = get_index(square, position);
+            let pos = self.positions[first][second];
+            if let Some(value) = pos.get_value() {
+                if value == num {
+                    return false;
+                }
+            }
+        }
+        true
     }
 }
 

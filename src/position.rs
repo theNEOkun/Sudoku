@@ -5,7 +5,7 @@ pub struct Position {
     pub x: usize,
     pub y: usize,
     pub index: (usize, usize),
-    value: Option<u8>,
+    value: Option<usize>,
 }
 
 impl Position {
@@ -27,7 +27,7 @@ impl Position {
     /// @param x is the position in the x-axis
     /// @param y is the position in the y-axis
     /// @param value is the value the position should contain
-    pub fn with_value(x: usize, y: usize, value: u8) -> Self {
+    pub fn with_value(x: usize, y: usize, value: usize) -> Self {
         Self {
             x,
             y,
@@ -41,7 +41,7 @@ impl Position {
     /// @param x is the position in the x-axis
     /// @param y is the position in the y-axis
     /// @param value is the value the position should have
-    pub fn reset(&mut self, x: usize, y: usize, value: u8) -> &Self {
+    pub fn reset(&mut self, x: usize, y: usize, value: usize) -> &Self {
         self.x = x;
         self.y = y;
         self.value = Some(value);
@@ -63,14 +63,14 @@ impl Position {
     /// Gets the value
     ///
     /// @return the value of the position
-    pub fn get_value(&self) -> Option<u8> {
+    pub fn get_value(&self) -> Option<usize> {
         self.value
     }
 
     /// Sets the value
     ///
     /// @param value is the value to set the position to
-    pub fn set_value(&mut self, value: u8) {
+    pub fn set_value(&mut self, value: usize) {
         self.value = Some(value);
     }
 }
