@@ -55,29 +55,6 @@ pub fn get_index(x: usize, y: usize) -> (usize, usize) {
     (first_array, second_array)
 }
 
-fn shuffle(mut vec: Vec<usize>) -> Vec<usize> {
-    let mut rng = thread_rng();
-    vec.shuffle(&mut rng);
-    vec
-}
-
-fn create_list(list: Vec<usize>) -> Vec<usize> {
-    let mut retval: Vec<usize> = vec![];
-
-    let shuffle_1 = shuffle(list.clone());
-    println!("{:?}", shuffle_1);
-    
-    for row in shuffle(list.clone()) {
-        for g in shuffle(list.clone()) {
-            retval.push((g * BASE) + row);
-        }
-    }
-
-    println!("len: {}", retval.len());
-
-    retval
-}
-
 fn pattern(r: usize, c: usize) -> usize {
     (BASE * (r % BASE) + r / BASE + c) % SIDE
 }
@@ -96,12 +73,16 @@ impl Board {
             positions: Box::new(positions),
         };
 
-        let list = (0..SIDE).collect::<Vec<usize>>();
-    
-        let rows = shuffle(list.clone());
-        let cols = shuffle(list);
+        let mut rng = thread_rng();
 
-        let nums = shuffle((0..(BASE * BASE)).collect::<Vec<usize>>().try_into().unwrap());
+        let mut rows = ((0..SIDE).collect::<Vec<usize>>());
+        rows.shuffle(&mut rng);
+        let mut cols = ((0..SIDE).collect::<Vec<usize>>());
+        cols.shuffle(&mut rng);
+
+        let mut nums: Vec<usize> = (0..(BASE * BASE)).collect();
+        nums.shuffle(&mut rng);
+
         for r in rows.iter() {
             for c in cols.iter() {
                 let pattern = pattern(*r, *c);
