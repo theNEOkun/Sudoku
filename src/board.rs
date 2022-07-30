@@ -87,12 +87,7 @@ impl Board {
     ///
     /// a board with all positions uniquely filled
     pub fn new() -> Self {
-        let positions = [[Position::default(); SIDE]; SIDE];
-
-        let mut board = Self {
-            filled: Box::new(positions),
-            empty: Box::new([[Position::default(); SIDE]; SIDE])
-        };
+        let mut positions = [[Position::default(); SIDE]; SIDE];
 
         let mut rng = thread_rng();
 
@@ -106,9 +101,14 @@ impl Board {
 
         for r in rows.iter() {
             for c in cols.iter() {
-                board[(*r, *c)].reset(*c, *r, nums[pattern(*r, *c)]);
+                positions[*r][*c].reset(*c, *r, nums[pattern(*r, *c)]);
             }
         }
+
+        let mut board = Self {
+            filled: Box::new(positions),
+            empty: Box::new(positions)
+        };
         removal(&mut board);
         board
     }
@@ -132,7 +132,7 @@ impl Board {
     ///
     /// ## Arguments
     ///
-    /// * info - is a vec of vec with usizes to fill each position in the board.
+    /// * info -is a vec of vec with usizes to fill each position in the board.
     ///         inner vecs represent a square
     pub fn with_squares(info: [[usize; SIDE]; SIDE]) -> Self {
         let mut filled = [[Position::default(); SIDE]; SIDE];
@@ -154,7 +154,7 @@ impl Board {
     ///
     /// ## Arguments
     ///
-    /// * info - is a vec of vec with usizes to fill each position in the board.
+    /// * info -is a vec of vec with usizes to fill each position in the board.
     ///         inner vecs represent a square
     pub fn with_rows(info: [[usize; SIDE]; SIDE]) -> Self {
         let mut filled = [[Position::default(); SIDE]; SIDE];
@@ -312,13 +312,16 @@ impl std::fmt::Debug for Board {
         for each in self.filled.iter() {
             output += &format!("{:?}\n", each);
         }
+        for each in self.empty.iter() {
+            output += &format!("{:?}\n", each);
+        }
         write!(f, "")
     }
 }
 
 impl std::fmt::Display for Board {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        for each in self.filled.iter() {
+        for each in self.empty.iter() {
             for each in each {
                 if let Some(val) = each.get_value() {
                     write!(f, "|{}|", val + 1).unwrap();
