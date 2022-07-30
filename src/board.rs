@@ -165,7 +165,8 @@ impl Board {
 
     pub fn add_number(&mut self, x: usize, y: usize, num: usize) -> bool {
         if let None = self[(x, y)].get_value() {
-            if self.num_in_row(y, num) && self.num_in_column(x, num) {
+            let square = get_square(x, y);
+            if self.num_in_row(y, num) && self.num_in_column(x, num) && self.num_in_square(square, num) {
                 self.tries[y][x].set_value(num);
                 true
             } else {
@@ -534,6 +535,7 @@ mod board_test {
 
         assert!(!board.add_number(0, 0, 1));
         assert!(board.add_number(0, 5, 1));
+        assert!(board.add_number(4, 4, 1));
     }
 
     #[test]
