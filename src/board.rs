@@ -61,21 +61,25 @@ fn shuffle(mut vec: Vec<usize>) -> Vec<usize> {
     vec
 }
 
-fn create_list() -> Vec<usize> {
-    let list = (0..SIDE).collect::<Vec<usize>>();
+fn create_list(list: Vec<usize>) -> Vec<usize> {
     let mut retval: Vec<usize> = vec![];
+
+    let shuffle_1 = shuffle(list.clone());
+    println!("{:?}", shuffle_1);
     
     for row in shuffle(list.clone()) {
         for g in shuffle(list.clone()) {
-            retval.push(g * BASE + row);
+            retval.push((g * BASE) + row);
         }
     }
+
+    println!("len: {}", retval.len());
 
     retval
 }
 
 fn pattern(r: usize, c: usize) -> usize {
-    (BASE * (r % BASE) + (r / SIDE) + c) % BASE
+    (BASE * (r % BASE) + r / BASE + c) % SIDE
 }
 
 pub struct Board {
@@ -86,28 +90,25 @@ pub struct Board {
 
 impl Board {
     pub fn new() -> Self {
-        let mut positions = [[Position::default(); SIDE]; SIDE];
+        let positions = [[Position::default(); SIDE]; SIDE];
+
+        let mut board = Self {
+            positions: Box::new(positions),
+        };
+
+        let list = (0..SIDE).collect::<Vec<usize>>();
     
-        let rows = create_list();
-        let cols = create_list();
+        let rows = shuffle(list.clone());
+        let cols = shuffle(list);
 
-        println!("Rows: {rows:?}");
-        println!("Cols: {cols:?}");
-
-        let nums = shuffle((1..82).collect::<Vec<usize>>().try_into().unwrap());
-        for r in rows {
-            for c in &cols {
-                let x = (c / 9) as usize;
-                let y = (r % 9) as usize;
-                let pattern = pattern(r, *c);
-                println!("pattern: {pattern}");
-                positions[y][x].reset(x, y, nums[pattern as usize]);
+        let nums = shuffle((0..(BASE * BASE)).collect::<Vec<usize>>().try_into().unwrap());
+        for r in rows.iter() {
+            for c in cols.iter() {
+                let pattern = pattern(*r, *c);
+                board[(*r, *c)].reset(*c, *r, nums[pattern]);
             }
         }
-
-        Self {
-            positions: Box::new(positions),
-        }
+        board
     }
 
     /// Create a mew empty board, with all positions filled with no value
@@ -335,6 +336,13 @@ impl std::ops::Index<Position> for Board {
     }
 }
 
+impl std::ops::IndexMut<Position> for Board {
+    /// Indexes the underlying structure with an index
+    fn index_mut(&mut self, index: Position) -> &mut Self::Output {
+        &mut self[index.index]
+    }
+}
+
 impl std::ops::Index<(usize, usize)> for Board {
     type Output = Position;
 
@@ -342,6 +350,15 @@ impl std::ops::Index<(usize, usize)> for Board {
     fn index(&self, (first, second): (usize, usize)) -> &Self::Output {
         //let (first, second) = get_index(second, first);
         &self.positions[first][second]
+    }
+}
+
+impl std::ops::IndexMut<(usize, usize)> for Board {
+
+    /// Indexes the underlying structure with a tuple of (x, y)
+    fn index_mut(&mut self, (first, second): (usize, usize)) -> &mut Self::Output {
+        //let (first, second) = get_index(second, first);
+        &mut self.positions[first][second]
     }
 }
 
@@ -412,6 +429,14 @@ mod board_test {
     }
 
     #[test]
+    fn test_random() {
+        let board = Board::new();
+
+        let position = Position::new(2, 2);
+        assert!(board[position].get_value().is_some());
+    }
+
+    #[test]
     fn test_row_manual() {
         let board = get_board_with_values();
 
@@ -454,6 +479,10 @@ mod board_test {
 
         assert!(board.test_board());
 
+        let board = Board::new();
+
+        assert!(board.test_board());
+
         let board = get_board_with_false_values();
 
         assert!(!board.test_board());
@@ -465,6 +494,10 @@ mod board_test {
 
         assert!(board.test_row(0));
 
+        let board = Board::new();
+
+        assert!(board.test_row(0));
+
         let board = get_board_with_false_values();
 
         assert!(!board.test_row(0));
@@ -473,6 +506,10 @@ mod board_test {
     #[test]
     fn test_column() {
         let board = get_board_with_values();
+
+        assert!(board.test_column(0));
+
+        let board = Board::new();
 
         assert!(board.test_column(0));
 
