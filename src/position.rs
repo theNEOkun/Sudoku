@@ -73,6 +73,10 @@ impl Position {
     pub fn set_value(&mut self, value: usize) {
         self.value = Some(value);
     }
+
+    pub fn set_dir(&mut self, value: Option<usize>) {
+        self.value = value;
+    }
 }
 
 impl std::fmt::Debug for Position {

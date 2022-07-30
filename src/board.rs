@@ -59,28 +59,49 @@ fn pattern(r: usize, c: usize) -> usize {
     (BASE * (r % BASE) + r / BASE + c) % SIDE
 }
 
+fn removal(board: &mut Board) {
+    let squares = SIDE * SIDE;
+    let empties = (squares * 3) / 4;
+    let mut vec = (0..squares).collect::<Vec<usize>>();
+    vec.shuffle(&mut thread_rng());
+
+    for each in vec[0..empties].iter() {
+        board[(each/SIDE, each%SIDE)].set_dir(None);
+    }
+}
+
 pub struct Board {
     /// is the matrix of which the sudoku-square is
     /// [position](../position/struct.Position.html)
-    positions: Box<[[Position; SIDE]; SIDE]>,
+    pub filled: Box<[[Position; SIDE]; SIDE]>,
+    empty: Box<[[Position; SIDE]; SIDE]>,
 }
 
+const NUMBERS: [usize; 9] = [0, 1, 2, 3, 4, 5, 6, 7, 8];
+
 impl Board {
+
+    /// Creates a new board, with all positions filled
+    ///
+    /// ## Return
+    ///
+    /// a board with all positions uniquely filled
     pub fn new() -> Self {
         let positions = [[Position::default(); SIDE]; SIDE];
 
         let mut board = Self {
-            positions: Box::new(positions),
+            filled: Box::new(positions),
+            empty: Box::new([[Position::default(); SIDE]; SIDE])
         };
 
         let mut rng = thread_rng();
 
-        let mut rows = [0, 1, 2, 3, 4, 5, 6, 7, 8];
+        let mut rows = NUMBERS;
         rows.shuffle(&mut rng);
-        let mut cols = [0, 1, 2, 3, 4, 5, 6, 7, 8];
+        let mut cols = NUMBERS;
         cols.shuffle(&mut rng);
 
-        let mut nums = [0, 1, 2, 3, 4, 5, 6, 7, 8];
+        let mut nums = NUMBERS;
         nums.shuffle(&mut rng);
 
         for r in rows.iter() {
@@ -88,20 +109,22 @@ impl Board {
                 board[(*r, *c)].reset(*c, *r, nums[pattern(*r, *c)]);
             }
         }
+        removal(&mut board);
         board
     }
 
     /// Create a mew empty board, with all positions filled with no value
     pub fn new_empty() -> Self {
-        let mut positions = [[Position::default(); 9]; 9];
-        for y in 0..9 {
-            for x in 0..9 {
+        let mut positions = [[Position::default(); SIDE]; SIDE];
+        for y in 0..SIDE {
+            for x in 0..SIDE {
                 //let (first, second) = get_index(x, y);
                 positions[y][x].reset_none(x, y);
             }
         }
         Self {
-            positions: Box::new(positions),
+            filled: Box::new(positions),
+            empty: Box::new(positions),
         }
     }
 
@@ -111,18 +134,19 @@ impl Board {
     ///
     /// * info - is a vec of vec with usizes to fill each position in the board.
     ///         inner vecs represent a square
-    pub fn with_squares(info: [[usize; 9]; 9]) -> Self {
-        let mut positions = [[Position::default(); 9]; 9];
+    pub fn with_squares(info: [[usize; SIDE]; SIDE]) -> Self {
+        let mut filled = [[Position::default(); SIDE]; SIDE];
 
         for (first, outer_each) in info.iter().enumerate() {
             for (second, inner_each) in outer_each.iter().enumerate() {
                 let (first, second) = get_index(second, first);
-                positions[first][second].reset(second, first, *inner_each);
+                filled[first][second].reset(second, first, *inner_each);
             }
         }
 
         Self {
-            positions: Box::new(positions),
+            filled: Box::new(filled),
+            empty: Box::new(filled),
         }
     }
 
@@ -132,17 +156,18 @@ impl Board {
     ///
     /// * info - is a vec of vec with usizes to fill each position in the board.
     ///         inner vecs represent a square
-    pub fn with_rows(info: [[usize; 9]; 9]) -> Self {
-        let mut positions = [[Position::default(); 9]; 9];
+    pub fn with_rows(info: [[usize; SIDE]; SIDE]) -> Self {
+        let mut filled = [[Position::default(); SIDE]; SIDE];
 
         for (first, outer_each) in info.iter().enumerate() {
             for (second, inner_each) in outer_each.iter().enumerate() {
-                positions[first][second].reset(first, second, *inner_each);
+                filled[first][second].reset(first, second, *inner_each);
             }
         }
 
         Self {
-            positions: Box::new(positions),
+            filled: Box::new(filled),
+            empty: Box::new(filled),
         }
     }
 
@@ -152,7 +177,7 @@ impl Board {
     /// true if the board is correct, else false
     pub fn test_board(&self) -> bool {
         let mut returnval = true;
-        for each in 0..9 {
+        for each in 0..SIDE {
             returnval &= self.test_row(each);
             returnval &= self.test_column(each);
             returnval &= self.test_square(each);
@@ -252,7 +277,7 @@ impl Board {
         let mut tests = 0b000000000;
         for position in 0..SIDE {
             let (first, second) = get_index(square, position);
-            let pos = self.positions[first][second];
+            let pos = self.filled[first][second];
             if let Some(value) = pos.get_value() {
                 let pos = 1 << value;
                 if !(((tests & pos) >> value) == 1) {
@@ -270,7 +295,7 @@ impl Board {
     pub fn num_in_square(&self, square: usize, num: usize) -> bool {
         for position in 0..SIDE {
             let (first, second) = get_index(square, position);
-            let pos = self.positions[first][second];
+            let pos = self.filled[first][second];
             if let Some(value) = pos.get_value() {
                 if value == num {
                     return false;
@@ -284,7 +309,7 @@ impl Board {
 impl std::fmt::Debug for Board {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let mut output = String::from("");
-        for each in self.positions.iter() {
+        for each in self.filled.iter() {
             output += &format!("{:?}\n", each);
         }
         write!(f, "")
@@ -293,7 +318,7 @@ impl std::fmt::Debug for Board {
 
 impl std::fmt::Display for Board {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        for each in self.positions.iter() {
+        for each in self.filled.iter() {
             for each in each {
                 if let Some(val) = each.get_value() {
                     write!(f, "|{}|", val + 1).unwrap();
@@ -329,7 +354,7 @@ impl std::ops::Index<(usize, usize)> for Board {
     /// Indexes the underlying structure with a tuple of (x, y)
     fn index(&self, (first, second): (usize, usize)) -> &Self::Output {
         //let (first, second) = get_index(second, first);
-        &self.positions[first][second]
+        &self.empty[first][second]
     }
 }
 
@@ -338,7 +363,7 @@ impl std::ops::IndexMut<(usize, usize)> for Board {
     /// Indexes the underlying structure with a tuple of (x, y)
     fn index_mut(&mut self, (first, second): (usize, usize)) -> &mut Self::Output {
         //let (first, second) = get_index(second, first);
-        &mut self.positions[first][second]
+        &mut self.empty[first][second]
     }
 }
 
@@ -412,8 +437,7 @@ mod board_test {
     fn test_random() {
         let board = Board::new();
 
-        let position = Position::new(2, 2);
-        assert!(board[position].get_value().is_some());
+        assert!(board.filled[2][2].get_value().is_some());
     }
 
     #[test]
@@ -471,31 +495,45 @@ mod board_test {
     #[test]
     fn test_row() {
         let board = get_board_with_values();
-
-        assert!(board.test_row(0));
+        
+        for each in 0..SIDE {
+            assert!(board.test_row(each));
+        }
 
         let board = Board::new();
-
-        assert!(board.test_row(0));
+        
+        for each in 0..SIDE {
+            assert!(board.test_row(each));
+        }
 
         let board = get_board_with_false_values();
-
-        assert!(!board.test_row(0));
+        
+        for each in 0..SIDE {
+            // assert NOT
+            assert!(!board.test_row(each));
+        }
     }
 
     #[test]
     fn test_column() {
         let board = get_board_with_values();
 
-        assert!(board.test_column(0));
+        for each in 0..SIDE {
+            assert!(board.test_column(each));
+        }
 
         let board = Board::new();
 
-        assert!(board.test_column(0));
+        for each in 0..SIDE {
+            assert!(board.test_column(each));
+        }
 
         let board = get_board_with_false_values();
 
-        assert!(!board.test_column(0));
+        for each in 0..SIDE {
+            // assert NOT
+            assert!(!board.test_column(each));
+        }
     }
 
     #[test]
