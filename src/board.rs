@@ -75,18 +75,17 @@ impl Board {
 
         let mut rng = thread_rng();
 
-        let mut rows = ((0..SIDE).collect::<Vec<usize>>());
+        let mut rows = [0, 1, 2, 3, 4, 5, 6, 7, 8];
         rows.shuffle(&mut rng);
-        let mut cols = ((0..SIDE).collect::<Vec<usize>>());
+        let mut cols = [0, 1, 2, 3, 4, 5, 6, 7, 8];
         cols.shuffle(&mut rng);
 
-        let mut nums: Vec<usize> = (0..(BASE * BASE)).collect();
+        let mut nums = [0, 1, 2, 3, 4, 5, 6, 7, 8];
         nums.shuffle(&mut rng);
 
         for r in rows.iter() {
             for c in cols.iter() {
-                let pattern = pattern(*r, *c);
-                board[(*r, *c)].reset(*c, *r, nums[pattern]);
+                board[(*r, *c)].reset(*c, *r, nums[pattern(*r, *c)]);
             }
         }
         board
@@ -297,7 +296,7 @@ impl std::fmt::Display for Board {
         for each in self.positions.iter() {
             for each in each {
                 if let Some(val) = each.get_value() {
-                    write!(f, "|{}|", val).unwrap();
+                    write!(f, "|{}|", val + 1).unwrap();
                 } else {
                     write!(f, "| |").unwrap();
                 }
