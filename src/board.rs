@@ -84,9 +84,9 @@ fn create_empty_array() -> [[Position; SIDE]; SIDE] {
 pub struct Board {
     /// is the matrix of which the sudoku-square is
     /// [position](../position/struct.Position.html)
-    pub filled: Box<[[Position; SIDE]; SIDE]>,
-    empty: Box<[[Position; SIDE]; SIDE]>,
-    tries: Box<[[Position; SIDE]; SIDE]>,
+    filled: Box<[[Position; SIDE]; SIDE]>,
+    pub empty: Box<[[Position; SIDE]; SIDE]>,
+    pub tries: Box<[[Position; SIDE]; SIDE]>,
 }
 
 const NUMBERS: [usize; 9] = [0, 1, 2, 3, 4, 5, 6, 7, 8];
