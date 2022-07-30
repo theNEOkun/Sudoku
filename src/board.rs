@@ -71,11 +71,22 @@ fn removal(board: &mut Board) {
     }
 }
 
+fn create_empty_array() -> [[Position; SIDE]; SIDE] {
+    let mut vec = [[Position::default(); SIDE]; SIDE];
+    for first in 0..SIDE {
+        for second in 0..SIDE {
+            vec[first][second].reset_none(first, second);
+        }
+    }
+    vec
+}
+
 pub struct Board {
     /// is the matrix of which the sudoku-square is
     /// [position](../position/struct.Position.html)
     pub filled: Box<[[Position; SIDE]; SIDE]>,
     empty: Box<[[Position; SIDE]; SIDE]>,
+    tries: Box<[[Position; SIDE]; SIDE]>,
 }
 
 const NUMBERS: [usize; 9] = [0, 1, 2, 3, 4, 5, 6, 7, 8];
@@ -108,7 +119,8 @@ impl Board {
 
         let mut board = Self {
             filled: Box::new(positions),
-            empty: Box::new(positions)
+            empty: Box::new(positions),
+            tries: Box::new(create_empty_array()),
         };
         removal(&mut board);
         board
@@ -116,16 +128,11 @@ impl Board {
 
     /// Create a mew empty board, with all positions filled with no value
     pub fn new_empty() -> Self {
-        let mut positions = [[Position::default(); SIDE]; SIDE];
-        for y in 0..SIDE {
-            for x in 0..SIDE {
-                //let (first, second) = get_index(x, y);
-                positions[y][x].reset_none(x, y);
-            }
-        }
+        let positions = create_empty_array();
         Self {
             filled: Box::new(positions),
             empty: Box::new(positions),
+            tries: Box::new(create_empty_array()),
         }
     }
 
@@ -152,6 +159,20 @@ impl Board {
         Self {
             filled: Box::new(filled),
             empty: Box::new(filled),
+            tries: Box::new(create_empty_array()),
+        }
+    }
+
+    pub fn add_number(&mut self, x: usize, y: usize, num: usize) -> bool {
+        if let None = self[(x, y)].get_value() {
+            if self.num_in_row(y, num) && self.num_in_column(x, num) {
+                self.tries[y][x].set_value(num);
+                true
+            } else {
+                false
+            }
+        } else {
+            false
         }
     }
 
@@ -177,6 +198,7 @@ impl Board {
         Self {
             filled: Box::new(filled),
             empty: Box::new(filled),
+            tries: Box::new(create_empty_array()),
         }
     }
 
@@ -445,7 +467,7 @@ mod board_test {
         let info = [
             inner_info_1,
             inner_info_2,
-            inner_info_3,
+            inner_info_3, 
             inner_info_4,
             inner_info_5,
             inner_info_6,
@@ -457,15 +479,15 @@ mod board_test {
     }
 
     fn get_empty_board() -> Board {
-        let inner_info_1 = [7, 3, 5, 9, 10, 10, 8, 10, 10];
-        let inner_info_2 = [9, 10, 10, 10, 6, 10, 10, 10, 10];
-        let inner_info_3 = [8, 10, 10, 10, 10, 10, 10, 1, 10];
-        let inner_info_4 = [10, 10, 9, 10, 10, 10, 10, 4, 10];
-        let inner_info_5 = [10, 10, 8, 10, 10, 10, 10, 10, 10];
-        let inner_info_6 = [10, 10, 10, 10, 10, 9, 10, 10, 10];
-        let inner_info_7 = [10, 9, 10, 10, 10, 6, 10, 10, 3];
-        let inner_info_8 = [10, 8, 10, 10, 10, 3, 10, 10, 10];
-        let inner_info_9 = [4, 7, 3, 10, 10, 10, 2 ,10, 6];
+        let inner_info_1 = [7,  3,  5,  9,  10, 10,  8, 10, 10];
+        let inner_info_2 = [9, 10, 10, 10,  6, 10, 10,  10, 10];
+        let inner_info_3 = [8, 10, 10, 10, 10, 10, 10,   1, 10];
+        let inner_info_4 = [10,10,  9, 10, 10, 10, 10,   4, 10];
+        let inner_info_5 = [10,10,  8, 10, 10, 10, 10,  10, 10];
+        let inner_info_6 = [10,10, 10, 10, 10,  9, 10,  10, 10];
+        let inner_info_7 = [10, 9, 10, 10, 10,  6, 10,  10,  3];
+        let inner_info_8 = [10, 8, 10, 10, 10,  3, 10,  10, 10];
+        let inner_info_9 = [4,  7,  3, 10, 10, 10,  2,  10,  6];
 
         let info = [
             inner_info_1,
@@ -504,6 +526,14 @@ mod board_test {
             inner_info_9,
         ];
         Board::with_squares(info)
+    }
+
+    #[test]
+    fn test_add_number() {
+        let mut board = get_empty_board();
+
+        assert!(!board.add_number(0, 0, 1));
+        assert!(board.add_number(0, 5, 1));
     }
 
     #[test]
