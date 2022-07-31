@@ -1,22 +1,22 @@
 mod board;
 mod position;
+mod term;
 
-use std::{error::Error, io};
+use std::{error::Error, io::{self, Stdout}};
 
 use board::Board;
 
 use crossterm::{
-    event::{
-        self, DisableMouseCapture, EnableMouseCapture, Event, KeyCode,
-    },
+    event::{self, DisableMouseCapture, EnableMouseCapture, Event, KeyCode},
     execute,
     terminal::{disable_raw_mode, enable_raw_mode, EnterAlternateScreen, LeaveAlternateScreen},
 };
+use term::Term;
 use tui::{
     backend::{Backend, CrosstermBackend},
-    layout::{Constraint, Layout, Direction, Rect, Alignment},
+    layout::{Alignment, Constraint, Direction, Layout, Rect},
     style::{Color, Modifier, Style},
-    widgets::{Block, Borders, Paragraph, BorderType},
+    widgets::{Block, BorderType, Borders, Paragraph},
     Frame, Terminal,
 };
 
@@ -40,31 +40,28 @@ impl<'a> Cell<'a> {
     }
 
     fn block(&self) -> Block {
-        Block::default()
-            .style(
-                Style::default()
-                    .bg(Color::Black)
-                    .fg(if self.is_active() {
-                        Color::Cyan
-                    } else {
-                        Color::White
-                    })
-                    .add_modifier(if self.is_active() {
-                        Modifier::BOLD
-                    } else {
-                        Modifier::empty()
-                    }),
-            )
+        Block::default().style(
+            Style::default()
+                .bg(Color::Black)
+                .fg(if self.is_active() {
+                    Color::Cyan
+                } else {
+                    Color::White
+                })
+                .add_modifier(if self.is_active() {
+                    Modifier::BOLD
+                } else {
+                    Modifier::empty()
+                }),
+        )
     }
 
-    fn text_style(&self) -> Style {
-        Style::default()
-            .fg(Color::Black)
-            .bg(if self.is_active() {
-                Color::Cyan
-            } else {
-                Color::White
-            })
+    fn text_style(&self, bg_color: Color) -> Style {
+        Style::default().fg(Color::Black).bg(if self.is_active() {
+            Color::Cyan
+        } else {
+            bg_color
+        })
     }
 }
 
@@ -143,6 +140,12 @@ impl App {
     }
 }
 
+/// Sets up the board
+///
+/// ## Arguments
+///
+/// * f - is the frame to be written to
+/// * app - is the app to be run from
 fn board<B: Backend>(f: &mut Frame<B>, app: &mut App) {
     let rects = Rect {
         x: ((f.size().width) - 54) / 2,
@@ -157,15 +160,34 @@ fn board<B: Backend>(f: &mut Frame<B>, app: &mut App) {
         let col_rects = split_in_3x3(row_rect);
 
         for (c, col_rect) in col_rects.into_iter().enumerate() {
+            let bg_color = match r % 2 {
+                0 => {
+                    Color::Gray
+                },
+                _ => {
+                    Color::White
+                }
+            };
+
             let (c, r) = square_to_point(r, c);
             let cell = Cell::new(app, r, c);
             let text = format!(" {} ", cell);
 
-            let paragraph = Paragraph::new(text).alignment(Alignment::Center).block(cell.block()).style(cell.text_style());
+            let paragraph = Paragraph::new(text)
+                .alignment(Alignment::Center)
+                .style(cell.text_style(bg_color));
 
-            f.render_widget(paragraph, col_rect);
+            let text_rect = Rect {
+                x: col_rect.x + 1,
+                y: col_rect.y + 1,
+                width: 4,
+                height: 2,
+            };
+
+            f.render_widget(cell.block(), col_rect);
+            f.render_widget(paragraph, text_rect);
         }
-    };
+    }
 }
 
 /// Function to split a field into 3x3
@@ -201,27 +223,39 @@ fn split_in_3x3(area: Rect) -> Vec<Rect> {
     ret_rects
 }
 
+/// Function to split a rectangle in 3
+///
+/// see [MitchelPaulin](https://github.com/MitchelPaulin/sudoku-rs/blob/main/src/ui.rs) for
+/// implementaiton
+///
+/// ## Arguments
+/// * area - is the Rectangle to split
+/// * dir - is the direction to split in
+///
+/// ## Returns
+/// a Vec of Rect
 fn split_rect_in_3(area: Rect, dir: Direction) -> Vec<Rect> {
     Layout::default()
         .direction(dir)
         .constraints(
             [
-            Constraint::Ratio(1,3),
-            Constraint::Ratio(1,3),
-            Constraint::Ratio(1,3),
-            ].as_ref(),
+                Constraint::Ratio(1, 3),
+                Constraint::Ratio(1, 3),
+                Constraint::Ratio(1, 3),
+            ]
+            .as_ref(),
         )
         .split(area)
 }
 
-fn run_app<B: Backend>(terminal: &mut Terminal<B>, mut app: App) -> io::Result<()> {
+fn run_app(terminal: &mut Term, mut app: App) -> io::Result<()> {
     loop {
-        terminal.draw(|f| {
+        terminal.render(&mut |f: &mut Frame<CrosstermBackend<Stdout>>| {
             let outer_block = Block::default().borders(Borders::ALL);
             f.render_widget(outer_block, f.size());
 
             board(f, &mut app)
-        })?;
+        });
 
         if let Event::Key(key) = event::read()? {
             match key.code {
@@ -265,7 +299,7 @@ fn run_app<B: Backend>(terminal: &mut Terminal<B>, mut app: App) -> io::Result<(
                 KeyCode::Char('9') => {
                     app.enter(9);
                 }
-                KeyCode::Char('0') => {
+                KeyCode::Char('0') | KeyCode::Char(' ') => {
                     app.enter(0);
                 }
                 _ => {}
@@ -276,27 +310,14 @@ fn run_app<B: Backend>(terminal: &mut Terminal<B>, mut app: App) -> io::Result<(
 
 #[deny(clippy::pedantic)]
 fn main() -> Result<(), Box<dyn Error>> {
-    enable_raw_mode().unwrap();
-    let mut stdout = io::stdout();
-    execute!(stdout, EnterAlternateScreen, EnableMouseCapture).unwrap();
 
     let app = App::new();
 
-    let backend = CrosstermBackend::new(stdout);
-    let mut terminal = Terminal::new(backend).unwrap();
+    let mut terminal = Term::new();
 
     // create app and run it
     let res = run_app(&mut terminal, app);
 
-    disable_raw_mode().unwrap();
-    execute!(
-        terminal.backend_mut(),
-        LeaveAlternateScreen,
-        DisableMouseCapture
-    )
-    .unwrap();
-
-    terminal.show_cursor().unwrap();
 
     if let Err(err) = res {
         println!("{:?}", err)
