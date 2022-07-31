@@ -7,18 +7,17 @@ use board::Board;
 
 use crossterm::{
     event::{
-        self, DisableMouseCapture, EnableMouseCapture, Event, KeyCode, MouseButton, MouseEvent,
-        MouseEventKind,
+        self, DisableMouseCapture, EnableMouseCapture, Event, KeyCode,
     },
     execute,
     terminal::{disable_raw_mode, enable_raw_mode, EnterAlternateScreen, LeaveAlternateScreen},
 };
 use tui::{
     backend::{Backend, CrosstermBackend},
-    layout::{Constraint, Layout, Direction},
+    layout::{Constraint, Layout, Direction, Rect, Alignment},
     style::{Color, Modifier, Style},
-    widgets::{Block, Borders, Row, Table, TableState, Paragraph, BorderType},
-    Frame, Terminal, text::{Span, Spans},
+    widgets::{Block, Borders, Paragraph, BorderType},
+    Frame, Terminal,
 };
 
 struct Cell<'a> {
@@ -42,7 +41,6 @@ impl<'a> Cell<'a> {
 
     fn block(&self) -> Block {
         Block::default()
-            .borders(Borders::ALL)
             .style(
                 Style::default()
                     .bg(Color::Black)
@@ -57,7 +55,6 @@ impl<'a> Cell<'a> {
                         Modifier::empty()
                     }),
             )
-            .border_type(BorderType::Rounded)
     }
 
     fn text_style(&self) -> Style {
@@ -77,87 +74,144 @@ impl std::fmt::Display for Cell<'_> {
             f,
             "{}",
             if let Some(val) = self.app.board[self.position()] {
-                val.to_string()
+                (val + 1).to_string()
             } else {
-                String::from(" ")
+                if let Some(val) = self.app.board.tries[self.row][self.col] {
+                    (val + 1).to_string()
+                } else {
+                    String::from("_")
+                }
             }
         )
     }
 }
 
 struct App {
-    state: TableState,
     board: Board,
-    active_column: usize,
-    active_row: usize,
+    active_column: isize,
+    active_row: isize,
 }
 
 impl App {
     pub fn new() -> Self {
         Self {
-            state: TableState::default(),
             board: Board::new(),
-            active_column: 0,
-            active_row: 0,
+            active_column: 5,
+            active_row: 5,
         }
     }
 
     fn up(&mut self) {
-        if let Some(active_row) = self.active_row.checked_sub(1) {
-            self.active_row = active_row;
+        self.active_row = if self.active_row - 1 > -1 {
+            self.active_row - 1
+        } else {
+            0
         }
     }
 
     fn down(&mut self) {
-        self.active_row += usize::from(self.active_row < 8);
+        self.active_row = if self.active_row + 1 < (crate::board::SIDE as isize) {
+            self.active_row + 1
+        } else {
+            crate::board::SIDE as isize - 1
+        }
     }
 
     fn left(&mut self) {
-        if let Some(active_column) = self.active_column.checked_sub(1) {
-            self.active_column = active_column;
+        self.active_column = if self.active_column - 1 > -1 {
+            self.active_column - 1
+        } else {
+            0
         }
     }
 
     fn right(&mut self) {
-        self.active_column += usize::from(self.active_column < 8);
+        self.active_column = if self.active_column + 1 < (crate::board::SIDE as isize) {
+            self.active_column + 1
+        } else {
+            crate::board::SIDE as isize - 1
+        }
     }
 
     fn active(&self) -> (usize, usize) {
-        (self.active_row, self.active_column)
+        (self.active_row as usize, self.active_column as usize)
+    }
+
+    fn enter(&mut self, digit: usize) -> bool {
+        let (row, col) = self.active();
+        self.board.add_number(col, row, digit)
     }
 }
 
 fn board<B: Backend>(f: &mut Frame<B>, app: &mut App) {
-    let rects = Layout::default()
-        .constraints([Constraint::Min(50)].as_ref())
-        .margin(5)
-        .split(f.size());
+    let rects = Rect {
+        x: ((f.size().width) - 54) / 2,
+        y: f.size().y + 2,
+        width: 54,
+        height: 27,
+    };
 
-    let row_rects = Layout::default()
-        .direction(Direction::Vertical)
-        .vertical_margin(1)
-        .horizontal_margin(0)
-        .constraints(std::iter::repeat(Constraint::Length(3)).collect::<Vec<_>>())
-        .split(rects[0]);
+    let large_cells = split_in_3x3(rects);
 
-    for (r, row_rect) in row_rects.into_iter().enumerate() {
-
-        let col_rects = Layout::default()
-            .direction(Direction::Horizontal)
-            .vertical_margin(1)
-            .horizontal_margin(0)
-            .constraints(std::iter::repeat(Constraint::Length(3)).collect::<Vec<_>>())
-            .split(row_rect);
+    for (r, row_rect) in large_cells.into_iter().enumerate() {
+        let col_rects = split_in_3x3(row_rect);
 
         for (c, col_rect) in col_rects.into_iter().enumerate() {
+            let (c, r) = square_to_point(r, c);
             let cell = Cell::new(app, r, c);
-            let text = format!("{} ", cell);
+            let text = format!(" {} ", cell);
 
-            let paragraph = Paragraph::new(text).block(cell.block()).style(cell.text_style());
+            let paragraph = Paragraph::new(text).alignment(Alignment::Center).block(cell.block()).style(cell.text_style());
 
             f.render_widget(paragraph, col_rect);
         }
     };
+}
+
+/// Function to split a field into 3x3
+///
+/// see [MitchelPaulin](https://github.com/MitchelPaulin/sudoku-rs/blob/main/src/ui.rs) for
+/// implementaiton
+fn square_to_point(square_number: usize, cell_numbe: usize) -> (usize, usize) {
+    let col = (square_number % 3) * 3 + cell_numbe % 3;
+    let row = (square_number / 3) * 3 + cell_numbe / 3;
+
+    (col, row)
+}
+
+/// Function to split a field into 3x3
+///
+/// see [MitchelPaulin](https://github.com/MitchelPaulin/sudoku-rs/blob/main/src/ui.rs) for
+/// implementaiton
+///
+/// ## Arguments
+///
+/// * area - The area to split
+///
+/// ## Returns
+///
+/// a Vec of rects defining the split area
+fn split_in_3x3(area: Rect) -> Vec<Rect> {
+    let mut ret_rects = vec![];
+
+    let rows = split_rect_in_3(area, Direction::Vertical);
+    for row in rows {
+        ret_rects.extend(split_rect_in_3(row, Direction::Horizontal));
+    }
+    ret_rects
+}
+
+fn split_rect_in_3(area: Rect, dir: Direction) -> Vec<Rect> {
+    Layout::default()
+        .direction(dir)
+        .constraints(
+            [
+            Constraint::Ratio(1,3),
+            Constraint::Ratio(1,3),
+            Constraint::Ratio(1,3),
+            ].as_ref(),
+        )
+        .split(area)
 }
 
 fn run_app<B: Backend>(terminal: &mut Terminal<B>, mut app: App) -> io::Result<()> {
@@ -184,7 +238,36 @@ fn run_app<B: Backend>(terminal: &mut Terminal<B>, mut app: App) -> io::Result<(
                 KeyCode::Down => {
                     app.down();
                 }
-                KeyCode::Char(c) => {}
+                KeyCode::Char('1') => {
+                    app.enter(1);
+                }
+                KeyCode::Char('2') => {
+                    app.enter(2);
+                }
+                KeyCode::Char('3') => {
+                    app.enter(3);
+                }
+                KeyCode::Char('4') => {
+                    app.enter(4);
+                }
+                KeyCode::Char('5') => {
+                    app.enter(5);
+                }
+                KeyCode::Char('6') => {
+                    app.enter(6);
+                }
+                KeyCode::Char('7') => {
+                    app.enter(7);
+                }
+                KeyCode::Char('8') => {
+                    app.enter(8);
+                }
+                KeyCode::Char('9') => {
+                    app.enter(9);
+                }
+                KeyCode::Char('0') => {
+                    app.enter(0);
+                }
                 _ => {}
             }
         }

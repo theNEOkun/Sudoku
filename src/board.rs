@@ -1,8 +1,8 @@
 use crate::position::Position;
 use rand::{seq::SliceRandom, thread_rng};
 
-const BASE: usize = 3;
-const SIDE: usize = BASE * BASE;
+pub const BASE: usize = 3;
+pub const SIDE: usize = BASE * BASE;
 
 /// Gets the square based on the x and y
 ///
@@ -158,15 +158,29 @@ impl Board {
         }
     }
 
+    /// Adds a number to a position not previously filled in the starting-board
+    ///
+    /// ## Arguments
+    /// * x - The position in x to fill
+    /// * y - the position in y to fill
+    /// * num - the number to fill with, if < 9 then filled with that number, else None
+    ///
+    /// ## Returns
+    /// a boolean if it worked or not
     pub fn add_number(&mut self, x: usize, y: usize, num: usize) -> bool {
-        if let None = self[(x, y)] {
-            let square = get_square(x, y);
-            if self.num_in_row(y, num) && self.num_in_column(x, num) && self.num_in_square(square, num) {
-                self.tries[y][x] = Some(num);
+        let num = if num > 0 {
+            Some(num - 1)
+        } else {
+            None
+        };
+        if let None = self.empty[y][x] {
+            // let square = get_square(x, y);
+            // if self.num_in_row(y, num) && self.num_in_column(x, num) && self.num_in_square(square, num) {
+                self.tries[y][x] = num;
                 true
-            } else {
-                false
-            }
+            // } else {
+            //     false
+            // }
         } else {
             false
         }
@@ -249,8 +263,11 @@ impl Board {
     /// Return true if the number is NOT in the row, else false
     pub fn num_in_row(&self, row: usize, num: usize) -> bool {
         for column in 0..SIDE {
-            let pos = self[(row, column)];
-            if let Some(val) = pos {
+            if let Some(val) = self[(row, column)] {
+                if val == num {
+                    return false
+                }
+            } else if let Some(val) = self.tries[row][column] {
                 if val == num {
                     return false
                 }
@@ -298,8 +315,11 @@ impl Board {
     /// Return true if the number is NOT in the column, else false
     pub fn num_in_column(&self, column: usize, num: usize) -> bool {
         for row in 0..SIDE {
-            let pos = self[(row, column)];
-            if let Some(val) = pos {
+            if let Some(val) = self[(row, column)] {
+                if val == num {
+                    return false
+                }
+            } else if let Some(val) = self.tries[row][column] {
                 if val == num {
                     return false
                 }
@@ -352,9 +372,12 @@ impl Board {
     pub fn num_in_square(&self, square: usize, num: usize) -> bool {
         for position in 0..SIDE {
             let (first, second) = get_index(square, position);
-            let pos = self.filled[first][second];
-            if let Some(value) = pos {
+            if let Some(value) = self.empty[first][second] {
                 if value == num {
+                    return false;
+                }
+            } else if let Some(val) = self.tries[first][second] {
+                if val == num {
                     return false;
                 }
             }
