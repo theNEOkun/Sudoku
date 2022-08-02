@@ -293,21 +293,53 @@ fn split_rect_in_3(area: Rect, dir: Direction) -> Vec<Rect> {
 }
 
 fn info_window<B: Backend>(f: &mut Frame<B>, window: Rect, status: u8) {
-    let paragraph = Paragraph::new(vec![
+    let rect = Layout::default()
+        .direction(Direction::Horizontal)
+        .constraints([Constraint::Percentage(50), Constraint::Percentage(50)].as_ref())
+        .split(window);
+    let info_par = Paragraph::new(vec![
         Spans::from(format!(
-            "Is the board correct?: {}\n",
+            "Is board correct?: {}\n",
             if status & 0x1 == 0x1 { "true" } else { "false" },
         )),
         Spans::from(format!(
             "Saved: {} \n",
-            if status & 0b0110 == 0b0010 { "true" } else { "false" }
+            if status & 0b0110 == 0b0010 {
+                "true"
+            } else {
+                "false"
+            }
         )),
         Spans::from(format!(
             "Loaded: {} \n",
-            if status & 0b0110 == 0b0100 { "true" } else { "false" }
+            if status & 0b0110 == 0b0100 {
+                "true"
+            } else {
+                "false"
+            }
         )),
-    ]);
-    f.render_widget(paragraph, window);
+        Spans::from(String::from("")),
+    ])
+    .block(Block::default().borders(Borders::ALL))
+    .alignment(Alignment::Left);
+    let paragraph = Paragraph::new(vec![
+        Spans::from(String::from(
+            "↑↓←→ for up/down/left/right"
+        )),
+        Spans::from(String::from(
+            "1-9 for adding a number"
+        )),
+        Spans::from(String::from(
+            "Space or 0 for removing a number"
+        )),
+        Spans::from(String::from(
+            "S to save L to load"
+        )),
+    ])
+    .block(Block::default().borders(Borders::ALL))
+    .alignment(Alignment::Center);
+    f.render_widget(info_par, rect[0]);
+    f.render_widget(paragraph, rect[1]);
 }
 
 fn run_app(terminal: &mut Term, mut app: App) -> io::Result<()> {
