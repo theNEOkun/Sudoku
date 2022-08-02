@@ -15,7 +15,7 @@ use tui::{
     backend::{Backend, CrosstermBackend},
     layout::{Alignment, Constraint, Direction, Layout, Rect},
     style::{Color, Modifier, Style},
-    text::{Span, Spans},
+    text::Spans,
     widgets::{Block, Borders, Paragraph},
     Frame,
 };
@@ -32,6 +32,9 @@ struct Cell<'a> {
     /// Which value was there
     value: String,
 }
+
+const TILE_SIZE: u16 = 3;
+const SUDOKU_SIZE: u16 = TILE_SIZE * board::SIDE as u16;
 
 fn get_string_value(row: usize, col: usize, board: &Board) -> (String, bool) {
     // Is there a number in the "empty"-board?
@@ -196,10 +199,10 @@ impl App {
 /// * app - is the app to be run from
 fn board<B: Backend>(f: &mut Frame<B>, window: Rect, app: &mut App) {
     let rects = Rect {
-        x: window.x,
-        y: window.y,
-        width: 54,
-        height: 27,
+        x: (window.x + SUDOKU_SIZE / 4),
+        y: (window.y + SUDOKU_SIZE / 8),
+        width: SUDOKU_SIZE * 2,
+        height: SUDOKU_SIZE,
     };
 
     let large_cells = split_in_3x3(rects);
@@ -292,6 +295,13 @@ fn split_rect_in_3(area: Rect, dir: Direction) -> Vec<Rect> {
         .split(area)
 }
 
+/// Used to write the information - window
+///
+/// ## Arguments
+///
+/// * f - The frame used to write into
+/// * window - is the alloted window to be contained in
+/// * status - is a bitflag of different statuses
 fn info_window<B: Backend>(f: &mut Frame<B>, window: Rect, status: u8) {
     let rect = Layout::default()
         .direction(Direction::Horizontal)
