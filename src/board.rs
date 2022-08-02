@@ -60,7 +60,7 @@ fn pattern(r: usize, c: usize) -> usize {
 }
 
 /// Used to remove values from the board
-fn removal(position: &mut [[Option<usize>; SIDE]; SIDE]) {
+fn removal(position: &mut [[Option<usize>; SIDE]; SIDE]) -> usize {
     let squares = SIDE * SIDE;
     let empties = (squares * 3) / 4;
     let mut vec = (0..squares).collect::<Vec<usize>>();
@@ -69,6 +69,7 @@ fn removal(position: &mut [[Option<usize>; SIDE]; SIDE]) {
     for each in vec[0..empties].iter() {
         position[each%SIDE][each/SIDE] = None;
     }
+    empties
 }
 
 fn create_empty_array() -> [[Option<usize>; SIDE]; SIDE] {
@@ -82,6 +83,7 @@ pub struct Board {
     filled: Box<[[Option<usize>; SIDE]; SIDE]>,
     pub empty: Box<[[Option<usize>; SIDE]; SIDE]>,
     pub tries: Box<[[Option<usize>; SIDE]; SIDE]>,
+    pub empty_squares: usize,
 }
 
 const NUMBERS: [usize; 9] = [0, 1, 2, 3, 4, 5, 6, 7, 8];
@@ -114,12 +116,13 @@ impl Board {
             }
         }
 
-        removal(&mut positions);
+        let empty_squares = removal(&mut positions);
 
         let board = Self {
             filled,
             empty: Box::new(positions),
             tries: Box::new(positions),
+            empty_squares,
         };
         board
     }
@@ -131,6 +134,7 @@ impl Board {
             filled: Box::new(positions),
             empty: Box::new(positions),
             tries: Box::new(create_empty_array()),
+            empty_squares: SIDE* SIDE,
         }
     }
 
@@ -158,6 +162,7 @@ impl Board {
             filled: Box::new(filled),
             empty: Box::new(filled),
             tries: Box::new(create_empty_array()),
+            empty_squares: SIDE* SIDE,
         }
     }
 
@@ -212,6 +217,7 @@ impl Board {
             filled: Box::new(filled),
             empty: Box::new(filled),
             tries: Box::new(create_empty_array()),
+            empty_squares: SIDE * SIDE,
         }
     }
 
