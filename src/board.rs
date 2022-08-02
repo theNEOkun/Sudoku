@@ -60,14 +60,14 @@ fn pattern(r: usize, c: usize) -> usize {
 }
 
 /// Used to remove values from the board
-fn removal(board: &mut Board) {
+fn removal(position: &mut [[Option<usize>; SIDE]; SIDE]) {
     let squares = SIDE * SIDE;
     let empties = (squares * 3) / 4;
     let mut vec = (0..squares).collect::<Vec<usize>>();
     vec.shuffle(&mut thread_rng());
 
     for each in vec[0..empties].iter() {
-        board[(each/SIDE, each%SIDE)] = None;
+        position[each%SIDE][each/SIDE] = None;
     }
 }
 
@@ -106,18 +106,21 @@ impl Board {
         let mut nums = NUMBERS;
         nums.shuffle(&mut rng);
 
+        let filled = Box::new(positions.clone());
+
         for r in rows.iter() {
             for c in cols.iter() {
                 positions[*r][*c] = Some(nums[pattern(*r, *c)]);
             }
         }
 
+        removal(&mut positions);
+
         let mut board = Self {
-            filled: Box::new(positions),
+            filled,
             empty: Box::new(positions),
             tries: Box::new(create_empty_array()),
         };
-        removal(&mut board);
         board
     }
 
