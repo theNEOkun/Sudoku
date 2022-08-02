@@ -107,8 +107,6 @@ impl Board {
         let mut nums = NUMBERS;
         nums.shuffle(&mut rng);
 
-        let filled = Box::new(positions.clone());
-
         for r in rows.iter() {
             for c in cols.iter() {
                 positions[*r][*c] = Some(nums[pattern(*r, *c)]);
@@ -200,17 +198,18 @@ impl Board {
         let mut empty_squares = SIDE * SIDE;
 
         for (pos, each) in string.chars().enumerate() {
-            println!("{each}");
+            let y = pos/SIDE;
+            let x = pos%SIDE;
             if each == '.' {
                 continue;
             } else {
                 let cur_val = each as usize - '0' as usize;
                 if cur_val < 9 {
-                    positions[pos%SIDE][pos/SIDE] = Some(cur_val);
+                    positions[y][x] = Some(cur_val);
                 } else {
                     let val = Some(each as usize - 'a' as usize);
-                    positions[pos%SIDE][pos/SIDE] = val;
-                    old_positions[pos%SIDE][pos/SIDE] = val;
+                    positions[y][x] = val;
+                    old_positions[y][x] = val;
                 }
                 empty_squares -= 1;
             };

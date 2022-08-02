@@ -339,6 +339,12 @@ fn run_app(terminal: &mut Term, mut app: App) -> io::Result<()> {
                 KeyCode::Down => {
                     app.down();
                 }
+                KeyCode::Char('s') => {
+                    std::fs::write("saved", app.board.to_string())?;
+                }
+                KeyCode::Char('l') => {
+                    app.board = Board::from_string(std::fs::read_to_string("saved")?);
+                }
                 KeyCode::Char('1') => {
                     app.enter(1);
                 }
