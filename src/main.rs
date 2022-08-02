@@ -16,7 +16,7 @@ use tui::{
     layout::{Alignment, Constraint, Direction, Layout, Rect},
     style::{Color, Modifier, Style},
     widgets::{Block, Borders, Paragraph},
-    Frame,
+    Frame, text::Span,
 };
 
 struct Cell<'a> {
@@ -151,7 +151,25 @@ impl App {
     /// a boolean if it succeeded
     fn enter(&mut self, digit: usize) -> bool {
         let (row, col) = self.active();
-        self.board.add_number(col, row, digit)
+        if self.board.add_number(col, row, digit) {
+            self.filled_squares += 1;
+            true
+        } else {
+            false
+        }
+    }
+
+    /// Checks if the number of filled squares are the same as empty squares on the board
+    ///
+    /// ## Returns
+    ///
+    /// true if they are the same, else false"
+    fn finished(&self) -> bool {
+        if self.filled_squares == self.board.empty_squares {
+            true
+        } else {
+            false
+        }
     }
 }
 
@@ -161,10 +179,10 @@ impl App {
 ///
 /// * f - is the frame to be written to
 /// * app - is the app to be run from
-fn board<B: Backend>(f: &mut Frame<B>, app: &mut App) {
+fn board<B: Backend>(f: &mut Frame<B>, window: Rect, app: &mut App) {
     let rects = Rect {
-        x: ((f.size().width) - 54) / 2,
-        y: f.size().y + 2,
+        x: window.x,
+        y: window.y,
         width: 54,
         height: 27,
     };
@@ -259,13 +277,36 @@ fn split_rect_in_3(area: Rect, dir: Direction) -> Vec<Rect> {
         .split(area)
 }
 
+fn info_window<B: Backend>(f: &mut Frame<B>, window: Rect, correct: bool) {
+    let paragraph = Paragraph::new(Span::from(format!("{}", if correct { "correct" } else { "false" })));
+    f.render_widget(paragraph, window);
+}
+
 fn run_app(terminal: &mut Term, mut app: App) -> io::Result<()> {
+    let mut correct = false;
     loop {
         terminal.render(&mut |f: &mut Frame<CrosstermBackend<Stdout>>| {
             let outer_block = Block::default().borders(Borders::ALL);
             f.render_widget(outer_block, f.size());
+            let layout = Layout::default()
+                .direction(Direction::Horizontal)
+                .constraints([
+                    Constraint::Ratio(1, 3),
+                    Constraint::Ratio(1, 3),
+                    Constraint::Ratio(1, 3),
+                ])
+                .split(f.size());
 
-            board(f, &mut app)
+            let center = Layout::default()
+                .direction(Direction::Vertical)
+                .constraints([
+                    Constraint::Ratio(2, 3),
+                    Constraint::Ratio(1, 3),
+                ])
+                .split(layout[1]);
+
+            board(f, center[0], &mut app);
+            info_window(f, center[1], correct);
         });
 
         if let Event::Key(key) = event::read()? {
@@ -315,6 +356,10 @@ fn run_app(terminal: &mut Term, mut app: App) -> io::Result<()> {
                 }
                 _ => {}
             }
+        }
+
+        if app.finished() {
+            correct = app.board.test_board();
         }
     }
 }

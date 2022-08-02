@@ -116,7 +116,7 @@ impl Board {
             }
         }
 
-        let empty_squares = removal(&mut positions);
+        let empty_squares = removal(&mut positions) + 1;
 
         let board = Self {
             filled,
@@ -166,6 +166,33 @@ impl Board {
         }
     }
 
+    /// Used to create and fill a board with values
+    ///
+    /// ## Arguments
+    ///
+    /// * info -is a vec of vec with usizes to fill each position in the board.
+    ///         inner vecs represent a square
+    pub fn with_rows(info: [[usize; SIDE]; SIDE]) -> Self {
+        let mut filled = [[None; SIDE]; SIDE];
+
+        for (first, outer_each) in info.iter().enumerate() {
+            for (second, inner_each) in outer_each.iter().enumerate() {
+                if *inner_each < 9 {
+                    filled[first][second] = Some(*inner_each);
+                } else {
+                    filled[first][second] = None;
+                }
+            }
+        }
+
+        Self {
+            filled: Box::new(filled),
+            empty: Box::new(filled),
+            tries: Box::new(create_empty_array()),
+            empty_squares: SIDE * SIDE,
+        }
+    }
+
     /// Adds a number to a position not previously filled in the starting-board
     ///
     /// ## Arguments
@@ -191,33 +218,6 @@ impl Board {
             // }
         } else {
             false
-        }
-    }
-
-    /// Used to create and fill a board with values
-    ///
-    /// ## Arguments
-    ///
-    /// * info -is a vec of vec with usizes to fill each position in the board.
-    ///         inner vecs represent a square
-    pub fn with_rows(info: [[usize; SIDE]; SIDE]) -> Self {
-        let mut filled = [[None; SIDE]; SIDE];
-
-        for (first, outer_each) in info.iter().enumerate() {
-            for (second, inner_each) in outer_each.iter().enumerate() {
-                if *inner_each < 9 {
-                    filled[first][second] = Some(*inner_each);
-                } else {
-                    filled[first][second] = None;
-                }
-            }
-        }
-
-        Self {
-            filled: Box::new(filled),
-            empty: Box::new(filled),
-            tries: Box::new(create_empty_array()),
-            empty_squares: SIDE * SIDE,
         }
     }
 
