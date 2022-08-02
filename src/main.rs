@@ -15,19 +15,43 @@ use tui::{
     backend::{Backend, CrosstermBackend},
     layout::{Alignment, Constraint, Direction, Layout, Rect},
     style::{Color, Modifier, Style},
-    widgets::{Block, Borders, Paragraph},
-    Frame, text::Span,
+    text::Span,
+    widgets::{Block, BorderType, Borders, Paragraph},
+    Frame,
 };
 
 struct Cell<'a> {
     app: &'a App,
     row: usize,
     col: usize,
+    old: bool,
+    value: String,
+}
+
+fn get_string_value(row: usize, col: usize, board: &Board) -> (String, bool) {
+    // Is there a number in the "empty"-board?
+    if let Some(val) = board.empty[row][col] {
+        ((val + 1).to_string(), true)
+    } else {
+        // Is there a number in the board with tries?
+        if let Some(val) = board[(row, col)] {
+            ((val + 1).to_string(), false)
+        } else {
+            (String::from("_"), false)
+        }
+    }
 }
 
 impl<'a> Cell<'a> {
     fn new(app: &'a App, row: usize, col: usize) -> Self {
-        Self { app, row, col }
+        let (value, old) = get_string_value(row, col, &app.board);
+        Self {
+            app,
+            row,
+            col,
+            old,
+            value,
+        }
     }
 
     fn is_active(&self) -> bool {
@@ -56,29 +80,19 @@ impl<'a> Cell<'a> {
     }
 
     fn text_style(&self, bg_color: Color) -> Style {
-        Style::default().fg(Color::Black).bg(if self.is_active() {
-            Color::Cyan
-        } else {
-            bg_color
-        })
+        Style::default()
+            .fg(if self.old { Color::Red } else { Color::Black })
+            .bg(if self.is_active() {
+                Color::Cyan
+            } else {
+                bg_color
+            })
     }
 }
 
 impl std::fmt::Display for Cell<'_> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(
-            f,
-            "{}",
-            if let Some(val) = self.app.board[self.position()] {
-                (val + 1).to_string()
-            } else {
-                if let Some(val) = self.app.board.tries[self.row][self.col] {
-                    (val + 1).to_string()
-                } else {
-                    String::from("_")
-                }
-            }
-        )
+        write!(f, "{}", self.value)
     }
 }
 
@@ -278,7 +292,10 @@ fn split_rect_in_3(area: Rect, dir: Direction) -> Vec<Rect> {
 }
 
 fn info_window<B: Backend>(f: &mut Frame<B>, window: Rect, correct: bool) {
-    let paragraph = Paragraph::new(Span::from(format!("{}", if correct { "correct" } else { "false" })));
+    let paragraph = Paragraph::new(Span::from(format!(
+        "Is the board correct?: {}",
+        if correct { "true" } else { "false" }
+    )));
     f.render_widget(paragraph, window);
 }
 
@@ -299,10 +316,7 @@ fn run_app(terminal: &mut Term, mut app: App) -> io::Result<()> {
 
             let center = Layout::default()
                 .direction(Direction::Vertical)
-                .constraints([
-                    Constraint::Ratio(2, 3),
-                    Constraint::Ratio(1, 3),
-                ])
+                .constraints([Constraint::Ratio(2, 3), Constraint::Ratio(1, 3)])
                 .split(layout[1]);
 
             board(f, center[0], &mut app);
@@ -363,7 +377,7 @@ fn run_app(terminal: &mut Term, mut app: App) -> io::Result<()> {
         }
 
         if correct {
-            return Ok(())
+            return Ok(());
         }
     }
 }
