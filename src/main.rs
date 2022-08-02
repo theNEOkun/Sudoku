@@ -2,22 +2,21 @@ mod board;
 mod position;
 mod term;
 
-use std::{error::Error, io::{self, Stdout}};
+use std::{
+    error::Error,
+    io::{self, Stdout},
+};
 
 use board::Board;
 
-use crossterm::{
-    event::{self, DisableMouseCapture, EnableMouseCapture, Event, KeyCode},
-    execute,
-    terminal::{disable_raw_mode, enable_raw_mode, EnterAlternateScreen, LeaveAlternateScreen},
-};
+use crossterm::event::{self, Event, KeyCode};
 use term::Term;
 use tui::{
     backend::{Backend, CrosstermBackend},
     layout::{Alignment, Constraint, Direction, Layout, Rect},
     style::{Color, Modifier, Style},
-    widgets::{Block, BorderType, Borders, Paragraph},
-    Frame, Terminal,
+    widgets::{Block, Borders, Paragraph},
+    Frame,
 };
 
 struct Cell<'a> {
@@ -161,12 +160,8 @@ fn board<B: Backend>(f: &mut Frame<B>, app: &mut App) {
 
         for (c, col_rect) in col_rects.into_iter().enumerate() {
             let bg_color = match r % 2 {
-                0 => {
-                    Color::Gray
-                },
-                _ => {
-                    Color::White
-                }
+                0 => Color::Gray,
+                _ => Color::White,
             };
 
             let (c, r) = square_to_point(r, c);
@@ -310,14 +305,12 @@ fn run_app(terminal: &mut Term, mut app: App) -> io::Result<()> {
 
 #[deny(clippy::pedantic)]
 fn main() -> Result<(), Box<dyn Error>> {
-
     let app = App::new();
 
     let mut terminal = Term::new();
 
     // create app and run it
     let res = run_app(&mut terminal, app);
-
 
     if let Err(err) = res {
         println!("{:?}", err)
