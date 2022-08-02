@@ -86,17 +86,20 @@ struct App {
     board: Board,
     active_column: isize,
     active_row: isize,
+    filled_squares: usize,
 }
 
 impl App {
     pub fn new() -> Self {
         Self {
             board: Board::new(),
-            active_column: 5,
-            active_row: 5,
+            active_column: (board::SIDE / 2) as isize,
+            active_row: (board::SIDE / 2) as isize,
+            filled_squares: 0,
         }
     }
 
+    /// Moves the active position up
     fn up(&mut self) {
         self.active_row = if self.active_row - 1 > -1 {
             self.active_row - 1
@@ -105,6 +108,7 @@ impl App {
         }
     }
 
+    /// Moves the active position down
     fn down(&mut self) {
         self.active_row = if self.active_row + 1 < (crate::board::SIDE as isize) {
             self.active_row + 1
@@ -113,6 +117,7 @@ impl App {
         }
     }
 
+    /// Moves the active position left
     fn left(&mut self) {
         self.active_column = if self.active_column - 1 > -1 {
             self.active_column - 1
@@ -121,6 +126,7 @@ impl App {
         }
     }
 
+    /// Moves the active position right
     fn right(&mut self) {
         self.active_column = if self.active_column + 1 < (crate::board::SIDE as isize) {
             self.active_column + 1
@@ -129,10 +135,20 @@ impl App {
         }
     }
 
+    /// Getst the active position (y, x)
     fn active(&self) -> (usize, usize) {
         (self.active_row as usize, self.active_column as usize)
     }
 
+    /// Enters a number at the active position
+    ///
+    /// ## Arguments
+    ///
+    /// * digit - the number to add
+    ///
+    /// ## Returns
+    ///
+    /// a boolean if it succeeded
     fn enter(&mut self, digit: usize) -> bool {
         let (row, col) = self.active();
         self.board.add_number(col, row, digit)
