@@ -15,7 +15,7 @@ use tui::{
     backend::{Backend, CrosstermBackend},
     layout::{Alignment, Constraint, Direction, Layout, Rect},
     style::{Color, Modifier, Style},
-    text::Span,
+    text::{Span, Spans},
     widgets::{Block, Borders, Paragraph},
     Frame,
 };
@@ -292,16 +292,26 @@ fn split_rect_in_3(area: Rect, dir: Direction) -> Vec<Rect> {
         .split(area)
 }
 
-fn info_window<B: Backend>(f: &mut Frame<B>, window: Rect, correct: bool) {
-    let paragraph = Paragraph::new(Span::from(format!(
-        "Is the board correct?: {}",
-        if correct { "true" } else { "false" }
-    )));
+fn info_window<B: Backend>(f: &mut Frame<B>, window: Rect, status: u8) {
+    let paragraph = Paragraph::new(Spans::from(vec![
+        Span::raw(format!(
+            "Is the board correct?: {}\n",
+            if status & 0x1 == 0x1 { "true" } else { "false" },
+        )),
+        Span::raw(format!(
+            "Saved: {} \n",
+            if status & 0b0110 == 0b0010 { "true" } else { "false" }
+        )),
+        Span::raw(format!(
+            "Loaded: {} \n",
+            if status & 0b0110 == 0b0100 { "true" } else { "false" }
+        )),
+    ]));
     f.render_widget(paragraph, window);
 }
 
 fn run_app(terminal: &mut Term, mut app: App) -> io::Result<()> {
-    let mut correct = false;
+    let mut status: u8 = 0x0;
     loop {
         terminal.render(&mut |f: &mut Frame<CrosstermBackend<Stdout>>| {
             let outer_block = Block::default().borders(Borders::ALL);
@@ -321,7 +331,7 @@ fn run_app(terminal: &mut Term, mut app: App) -> io::Result<()> {
                 .split(layout[1]);
 
             board(f, center[0], &mut app);
-            info_window(f, center[1], correct);
+            info_window(f, center[1], status);
         });
 
         if let Event::Key(key) = event::read()? {
@@ -341,9 +351,13 @@ fn run_app(terminal: &mut Term, mut app: App) -> io::Result<()> {
                 }
                 KeyCode::Char('s') => {
                     std::fs::write("saved", app.board.to_string())?;
+                    status &= 0x1;
+                    status |= 0x2;
                 }
                 KeyCode::Char('l') => {
                     app.board = Board::from_string(std::fs::read_to_string("saved")?);
+                    status &= 0x1;
+                    status |= 0x4;
                 }
                 KeyCode::Char('1') => {
                     app.enter(1);
@@ -380,10 +394,12 @@ fn run_app(terminal: &mut Term, mut app: App) -> io::Result<()> {
         }
 
         if app.finished() {
-            correct = app.board.test_board();
+            if app.board.test_board() {
+                status |= 0x1
+            }
         }
 
-        if correct {
+        if status & 0x0 == 0x1 {
             return Ok(());
         }
     }
