@@ -116,10 +116,10 @@ impl Board {
 
         removal(&mut positions);
 
-        let mut board = Self {
+        let board = Self {
             filled,
             empty: Box::new(positions),
-            tries: Box::new(create_empty_array()),
+            tries: Box::new(positions),
         };
         board
     }
@@ -179,7 +179,7 @@ impl Board {
         if let None = self.empty[y][x] {
             // let square = get_square(x, y);
             // if self.num_in_row(y, num) && self.num_in_column(x, num) && self.num_in_square(square, num) {
-                self.tries[y][x] = num;
+                self[(y, x)] = num;
                 true
             // } else {
             //     false
@@ -270,10 +270,6 @@ impl Board {
                 if val == num {
                     return false
                 }
-            } else if let Some(val) = self.tries[row][column] {
-                if val == num {
-                    return false
-                }
             }
         }
         true
@@ -322,10 +318,6 @@ impl Board {
                 if val == num {
                     return false
                 }
-            } else if let Some(val) = self.tries[row][column] {
-                if val == num {
-                    return false
-                }
             }
         }
         true
@@ -347,7 +339,7 @@ impl Board {
         let mut tests = 0b000000000;
         for position in 0..SIDE {
             let (first, second) = get_index(square, position);
-            let pos = self.filled[first][second];
+            let pos = self[(first, second)];
             if let Some(value) = pos {
                 let pos = 1 << value;
                 if !(((tests & pos) >> value) == 1) {
@@ -375,12 +367,8 @@ impl Board {
     pub fn num_in_square(&self, square: usize, num: usize) -> bool {
         for position in 0..SIDE {
             let (first, second) = get_index(square, position);
-            if let Some(value) = self.empty[first][second] {
+            if let Some(value) = self[(first, second)] {
                 if value == num {
-                    return false;
-                }
-            } else if let Some(val) = self.tries[first][second] {
-                if val == num {
                     return false;
                 }
             }
@@ -432,38 +420,22 @@ impl std::fmt::Display for Board {
     }
 }
 
-impl std::ops::Index<Position> for Board {
-    type Output = Option<usize>;
-
-    /// Indexes the underlying structure with an index
-    fn index(&self, index: Position) -> &Self::Output {
-        &self[index.index]
-    }
-}
-
-impl std::ops::IndexMut<Position> for Board {
-    /// Indexes the underlying structure with an index
-    fn index_mut(&mut self, index: Position) -> &mut Self::Output {
-        &mut self[index.index]
-    }
-}
-
 impl std::ops::Index<(usize, usize)> for Board {
     type Output = Option<usize>;
 
-    /// Indexes the underlying structure with a tuple of (x, y)
+    /// Indexes the underlying structure with a tuple of (y, x)
     fn index(&self, (first, second): (usize, usize)) -> &Self::Output {
         //let (first, second) = get_index(second, first);
-        &self.empty[first][second]
+        &self.tries[first][second]
     }
 }
 
 impl std::ops::IndexMut<(usize, usize)> for Board {
 
-    /// Indexes the underlying structure with a tuple of (x, y)
+    /// Indexes the underlying structure with a tuple of (y, x)
     fn index_mut(&mut self, (first, second): (usize, usize)) -> &mut Self::Output {
         //let (first, second) = get_index(second, first);
-        &mut self.empty[first][second]
+        &mut self.tries[first][second]
     }
 }
 
@@ -596,8 +568,7 @@ mod board_test {
     fn test_creation() {
         let board = Board::new_empty();
 
-        let position = Position::new(2, 2);
-        assert_eq!(board[position], None);
+        assert_eq!(board[(2, 2)], None);
     }
 
     #[test]
