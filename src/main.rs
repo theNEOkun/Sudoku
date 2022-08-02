@@ -361,6 +361,10 @@ fn run_app(terminal: &mut Term, mut app: App) -> io::Result<()> {
         if app.finished() {
             correct = app.board.test_board();
         }
+
+        if correct {
+            return Ok(())
+        }
     }
 }
 

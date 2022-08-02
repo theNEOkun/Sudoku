@@ -133,7 +133,7 @@ impl Board {
         Self {
             filled: Box::new(positions),
             empty: Box::new(positions),
-            tries: Box::new(create_empty_array()),
+            tries: Box::new(positions),
             empty_squares: SIDE* SIDE,
         }
     }
@@ -161,7 +161,7 @@ impl Board {
         Self {
             filled: Box::new(filled),
             empty: Box::new(filled),
-            tries: Box::new(create_empty_array()),
+            tries: Box::new(filled),
             empty_squares: SIDE* SIDE,
         }
     }
@@ -188,7 +188,7 @@ impl Board {
         Self {
             filled: Box::new(filled),
             empty: Box::new(filled),
-            tries: Box::new(create_empty_array()),
+            tries: Box::new(filled),
             empty_squares: SIDE * SIDE,
         }
     }
@@ -449,10 +449,7 @@ impl std::ops::IndexMut<(usize, usize)> for Board {
 mod board_test {
     use super::*;
 
-    fn get_board() -> Board {
-        Board::new_empty()
-    }
-
+    /// Gets a filled board to test agains
     fn get_board_with_values() -> Board {
         let inner_info_1 = [0, 1, 2, 3, 4, 5, 6, 7, 8];
         let inner_info_2 = [3, 4, 5, 6, 7, 8, 0, 1, 2];
@@ -478,6 +475,7 @@ mod board_test {
         Board::with_rows(info)
     }
 
+    /// Get a board mostly filled
     fn get_empty_board() -> Board {
         let inner_info_1 = [7,  3,  5,  9,  10, 10,  8, 10, 10];
         let inner_info_2 = [9, 10, 10, 10,  6, 10, 10,  10, 10];
@@ -503,6 +501,7 @@ mod board_test {
         Board::with_rows(info)
     }
 
+    /// Get a board filled only with 1s to simulate a "false" board
     fn get_board_with_false_values() -> Board {
         let inner_info_1 = [1, 1, 1, 1, 1, 1, 1, 1, 1];
         let inner_info_2 = [1, 1, 1, 1, 1, 1, 1, 1, 1];
@@ -533,7 +532,7 @@ mod board_test {
         let mut board = get_empty_board();
 
         assert!(!board.add_number(0, 0, 1));
-        assert!(board.add_number(0, 5, 1));
+        assert!(board.add_number(5, 0, 1));
         assert!(board.add_number(4, 4, 1));
     }
 
@@ -579,7 +578,7 @@ mod board_test {
 
     #[test]
     fn test_random() {
-        let board = Board::new();
+        let board = get_board_with_values();
 
         assert!(board.filled[2][2].is_some());
     }
@@ -627,7 +626,7 @@ mod board_test {
 
         assert!(board.test_board());
 
-        let board = Board::new();
+        let board = get_board_with_values();
 
         assert!(board.test_board());
 
@@ -644,7 +643,7 @@ mod board_test {
             assert!(board.test_row(each));
         }
 
-        let board = Board::new();
+        let board = get_board_with_values();
         
         for each in 0..SIDE {
             assert!(board.test_row(each));
@@ -666,7 +665,7 @@ mod board_test {
             assert!(board.test_column(each));
         }
 
-        let board = Board::new();
+        let board = get_board_with_values();
 
         for each in 0..SIDE {
             assert!(board.test_column(each));
