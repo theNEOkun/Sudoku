@@ -193,6 +193,21 @@ impl Board {
         }
     }
 
+    pub fn from_string(string: String) -> Self {
+        let mut positions = [[0; SIDE]; SIDE];
+
+        for (pos, each) in string.chars().enumerate() {
+            println!("{each}");
+            positions[pos%SIDE][pos/SIDE] = if each == '.' {
+                10
+            } else {
+                each as usize - '0' as usize
+            };
+        }
+
+        Self::with_rows(positions)
+    }
+
     /// Adds a number to a position not previously filled in the starting-board
     ///
     /// ## Arguments
@@ -525,6 +540,15 @@ mod board_test {
             inner_info_9,
         ];
         Board::with_squares(info)
+    }
+
+    #[test]
+    fn test_from_string() {        
+        let test_string = "012345678345678012678012345120453786453786120786120453201534867534867201867201534";
+        let test_board = Board::from_string(test_string.to_string());
+
+        assert!(test_board.test_board());
+        assert!(test_board[(1, 1)] == Some(4));
     }
 
     #[test]

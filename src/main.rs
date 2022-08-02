@@ -16,15 +16,20 @@ use tui::{
     layout::{Alignment, Constraint, Direction, Layout, Rect},
     style::{Color, Modifier, Style},
     text::Span,
-    widgets::{Block, BorderType, Borders, Paragraph},
+    widgets::{Block, Borders, Paragraph},
     Frame,
 };
 
 struct Cell<'a> {
+    /// The app itself, containting the board
     app: &'a App,
+    /// The row of the specific cell (y-axis)
     row: usize,
+    /// The column of the cell (x-axis)
     col: usize,
+    /// If the value was prefilled or not
     old: bool,
+    /// Which value was there
     value: String,
 }
 
@@ -56,10 +61,6 @@ impl<'a> Cell<'a> {
 
     fn is_active(&self) -> bool {
         self.app.active() == (self.row, self.col)
-    }
-
-    fn position(&self) -> (usize, usize) {
-        (self.row, self.col)
     }
 
     fn block(&self) -> Block {
