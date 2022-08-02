@@ -77,10 +77,9 @@ fn create_empty_array() -> [[Option<usize>; SIDE]; SIDE] {
     vec
 }
 
+/// is the matrix of which the sudoku-square is
+/// [position](../position/struct.Position.html)
 pub struct Board {
-    /// is the matrix of which the sudoku-square is
-    /// [position](../position/struct.Position.html)
-    filled: Box<[[Option<usize>; SIDE]; SIDE]>,
     pub empty: Box<[[Option<usize>; SIDE]; SIDE]>,
     pub tries: Box<[[Option<usize>; SIDE]; SIDE]>,
     pub empty_squares: usize,
@@ -119,7 +118,6 @@ impl Board {
         let empty_squares = removal(&mut positions) + 1;
 
         let board = Self {
-            filled,
             empty: Box::new(positions),
             tries: Box::new(positions),
             empty_squares,
@@ -131,7 +129,6 @@ impl Board {
     pub fn new_empty() -> Self {
         let positions = create_empty_array();
         Self {
-            filled: Box::new(positions),
             empty: Box::new(positions),
             tries: Box::new(positions),
             empty_squares: SIDE* SIDE,
@@ -159,7 +156,6 @@ impl Board {
         }
 
         Self {
-            filled: Box::new(filled),
             empty: Box::new(filled),
             tries: Box::new(filled),
             empty_squares: SIDE* SIDE,
@@ -186,26 +182,45 @@ impl Board {
         }
 
         Self {
-            filled: Box::new(filled),
             empty: Box::new(filled),
             tries: Box::new(filled),
             empty_squares: SIDE * SIDE,
         }
     }
 
+    /// Used to create a board from a string where all numbers are entered, or'.' for a None
+    /// Preset values are denoted by letters, with 'a' being 0
+    ///
+    /// ## Arguments
+    ///
+    /// * string - The string to turn into a board
     pub fn from_string(string: String) -> Self {
-        let mut positions = [[0; SIDE]; SIDE];
+        let mut positions = [[None; SIDE]; SIDE];
+        let mut old_positions = [[None; SIDE]; SIDE];
+        let mut empty_squares = SIDE * SIDE;
 
         for (pos, each) in string.chars().enumerate() {
             println!("{each}");
-            positions[pos%SIDE][pos/SIDE] = if each == '.' {
-                10
+            if each == '.' {
+                continue;
             } else {
-                each as usize - '0' as usize
+                let cur_val = each as usize - '0' as usize;
+                if cur_val < 9 {
+                    positions[pos%SIDE][pos/SIDE] = Some(cur_val);
+                } else {
+                    let val = Some(each as usize - 'a' as usize);
+                    positions[pos%SIDE][pos/SIDE] = val;
+                    old_positions[pos%SIDE][pos/SIDE] = val;
+                }
+                empty_squares -= 1;
             };
         }
 
-        Self::with_rows(positions)
+        Self {
+            empty: Box::new(old_positions),
+            tries: Box::new(positions),
+            empty_squares,
+        }
     }
 
     /// Adds a number to a position not previously filled in the starting-board
@@ -396,20 +411,34 @@ impl Board {
         }
         true
     }
+
+    /// Used to convert the board to a parseable string
+    ///
+    /// ## Returns
+    /// 
+    /// a string where the value None is a '.', a value in the tries is the number,
+    /// and a value in the empty as a char, with 'a' == 0
+    pub fn to_string(&self) -> String {
+        let mut output = vec![];
+        for (y, each) in self.tries.iter().enumerate() {
+            for (x, value) in each.iter().enumerate() {
+                output.push(if let Some(value) = value {
+                    if self.empty[y][x] == None {
+                        *value as u8 + '0' as u8
+                    } else {
+                        *value as u8 + 'a' as u8
+                    }
+                } else {
+                    '.' as u8
+                } as char);
+            }
+        }
+        String::from_iter(output)
+    }
 }
 
 impl std::fmt::Debug for Board {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        for each in self.filled.iter() {
-            for each in each {
-                if let Some(val) = each {
-                    write!(f, "|{}|", val + 1)?;
-                } else {
-                    write!(f, "| |")?;
-                }
-            }
-            write!(f, "\n")?;
-        }
         write!(f, "\n")?;
         for each in self.empty.iter() {
             for each in each {
@@ -543,12 +572,26 @@ mod board_test {
     }
 
     #[test]
-    fn test_from_string() {        
-        let test_string = "012345678345678012678012345120453786453786120786120453201534867534867201867201534";
+    fn test_from_string() {
+        let test_string = "0b2345678345678012678012345120453786453786120786120453201534867534867201867201534";
         let test_board = Board::from_string(test_string.to_string());
 
         assert!(test_board.test_board());
         assert!(test_board[(1, 1)] == Some(4));
+
+        let test_string = "abcdefghidefghiabcghiabcdefbcaefdhigefdhigbcahigbcaefdcabfdeighfdeighcabighcabfde";
+        let test_board = Board::from_string(test_string.to_string());
+
+        assert!(test_board.test_board());
+        assert!(test_board[(1, 1)] == Some(4));
+    }
+
+    #[test]
+    fn test_to_string() {
+        let test_string = "abcdefghidefghiabcghiabcdefbcaefdhigefdhigbcahigbcaefdcabfdeighfdeighcabighcabfde";
+
+        let test_board = get_board_with_values();
+        assert_eq!(test_string, test_board.to_string());
     }
 
     #[test]
@@ -598,13 +641,6 @@ mod board_test {
         let board = Board::new_empty();
 
         assert_eq!(board[(2, 2)], None);
-    }
-
-    #[test]
-    fn test_random() {
-        let board = get_board_with_values();
-
-        assert!(board.filled[2][2].is_some());
     }
 
     #[test]
