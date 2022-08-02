@@ -293,25 +293,30 @@ fn split_rect_in_3(area: Rect, dir: Direction) -> Vec<Rect> {
 }
 
 fn info_window<B: Backend>(f: &mut Frame<B>, window: Rect, status: u8) {
-    let paragraph = Paragraph::new(Spans::from(vec![
-        Span::raw(format!(
+    let paragraph = Paragraph::new(vec![
+        Spans::from(format!(
             "Is the board correct?: {}\n",
             if status & 0x1 == 0x1 { "true" } else { "false" },
         )),
-        Span::raw(format!(
+        Spans::from(format!(
             "Saved: {} \n",
             if status & 0b0110 == 0b0010 { "true" } else { "false" }
         )),
-        Span::raw(format!(
+        Spans::from(format!(
             "Loaded: {} \n",
             if status & 0b0110 == 0b0100 { "true" } else { "false" }
         )),
-    ]));
+    ]);
     f.render_widget(paragraph, window);
 }
 
 fn run_app(terminal: &mut Term, mut app: App) -> io::Result<()> {
+    // Bitflags
+    // 0x1 = Is the solution correct?
+    // 0x2 = Is it saved?
+    // 0x4 = Is it loaded
     let mut status: u8 = 0x0;
+    let clear_flag = 0x1;
     loop {
         terminal.render(&mut |f: &mut Frame<CrosstermBackend<Stdout>>| {
             let outer_block = Block::default().borders(Borders::ALL);
@@ -351,43 +356,53 @@ fn run_app(terminal: &mut Term, mut app: App) -> io::Result<()> {
                 }
                 KeyCode::Char('s') => {
                     std::fs::write("saved", app.board.to_string())?;
-                    status &= 0x1;
+                    status &= clear_flag;
                     status |= 0x2;
                 }
                 KeyCode::Char('l') => {
                     app.board = Board::from_string(std::fs::read_to_string("saved")?);
-                    status &= 0x1;
+                    status &= clear_flag;
                     status |= 0x4;
                 }
                 KeyCode::Char('1') => {
                     app.enter(1);
+                    status &= clear_flag;
                 }
                 KeyCode::Char('2') => {
                     app.enter(2);
+                    status &= clear_flag;
                 }
                 KeyCode::Char('3') => {
                     app.enter(3);
+                    status &= clear_flag;
                 }
                 KeyCode::Char('4') => {
                     app.enter(4);
+                    status &= clear_flag;
                 }
                 KeyCode::Char('5') => {
                     app.enter(5);
+                    status &= clear_flag;
                 }
                 KeyCode::Char('6') => {
                     app.enter(6);
+                    status &= clear_flag;
                 }
                 KeyCode::Char('7') => {
                     app.enter(7);
+                    status &= clear_flag;
                 }
                 KeyCode::Char('8') => {
                     app.enter(8);
+                    status &= clear_flag;
                 }
                 KeyCode::Char('9') => {
                     app.enter(9);
+                    status &= clear_flag;
                 }
                 KeyCode::Char('0') | KeyCode::Char(' ') => {
                     app.enter(0);
+                    status &= clear_flag;
                 }
                 _ => {}
             }
