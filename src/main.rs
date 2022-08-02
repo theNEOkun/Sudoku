@@ -74,11 +74,6 @@ impl<'a> Cell<'a> {
                     Color::Cyan
                 } else {
                     Color::White
-                })
-                .add_modifier(if self.is_active() {
-                    Modifier::BOLD
-                } else {
-                    Modifier::empty()
                 }),
         )
     }
@@ -91,6 +86,11 @@ impl<'a> Cell<'a> {
             } else {
                 bg_color
             })
+                .add_modifier(if self.is_active() {
+                    Modifier::BOLD
+                } else {
+                    Modifier::empty()
+                })
     }
 }
 
@@ -119,37 +119,37 @@ impl App {
 
     /// Moves the active position up
     fn up(&mut self) {
-        self.active_row = if self.active_row - 1 > -1 {
+        self.active_row = if (self.active_row - 1) > -1 {
             self.active_row - 1
         } else {
-            0
+            (crate::board::SIDE - 1) as isize
         }
     }
 
     /// Moves the active position down
     fn down(&mut self) {
-        self.active_row = if self.active_row + 1 < (crate::board::SIDE as isize) {
+        self.active_row = if (self.active_row + 1) < (crate::board::SIDE as isize) {
             self.active_row + 1
-        } else {
-            crate::board::SIDE as isize - 1
-        }
-    }
-
-    /// Moves the active position left
-    fn left(&mut self) {
-        self.active_column = if self.active_column - 1 > -1 {
-            self.active_column - 1
         } else {
             0
         }
     }
 
+    /// Moves the active position left
+    fn left(&mut self) {
+        self.active_column = if (self.active_column - 1) > -1 {
+            self.active_column - 1
+        } else {
+            (crate::board::SIDE - 1) as isize
+        }
+    }
+
     /// Moves the active position right
     fn right(&mut self) {
-        self.active_column = if self.active_column + 1 < (crate::board::SIDE as isize) {
+        self.active_column = if (self.active_column + 1) < (crate::board::SIDE as isize) {
             self.active_column + 1
         } else {
-            crate::board::SIDE as isize - 1
+            0
         }
     }
 
