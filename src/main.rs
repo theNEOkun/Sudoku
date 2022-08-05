@@ -243,15 +243,18 @@ impl App {
 /// * app - is the app to be run from
 fn board<B: Backend>(f: &mut Frame<B>, window: Rect, app: &mut App) {
     let rects = Rect {
-        x: window.x + (SUDOKU_SIZE),
+        x: window.x + SUDOKU_SIZE / 4,
         y: (window.y + SUDOKU_SIZE / 8),
         width: SUDOKU_SIZE * 2,
         height: SUDOKU_SIZE,
     };
 
+    // Splits the alloted space into a 3x3
     let large_cells = split_in_3x3(rects);
 
     for (r, row_rect) in large_cells.into_iter().enumerate() {
+
+        // Splits each rectangle into a 3x3
         let col_rects = split_in_3x3(row_rect);
 
         for (c, col_rect) in col_rects.into_iter().enumerate() {
@@ -388,6 +391,7 @@ fn info_window<B: Backend>(f: &mut Frame<B>, window: Rect, status: u8) {
         Spans::from(String::from("1-9 for adding a number")),
         Spans::from(String::from("Space or 0 for removing a number")),
         Spans::from(String::from("S to save L to load")),
+        Spans::from(String::from("Q to Close")),
     ])
     .block(Block::default().borders(Borders::ALL))
     .alignment(Alignment::Center);
