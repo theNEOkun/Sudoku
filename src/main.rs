@@ -63,68 +63,6 @@ fn get_string_value(row: usize, col: usize, board: &Board) -> (String, bool) {
     }
 }
 
-impl<'a> Cell<'a> {
-    fn new(app: &'a App, row: usize, col: usize) -> Self {
-        let (value, old) = get_string_value(row, col, &app.board);
-        Self {
-            app,
-            row,
-            col,
-            old,
-            value,
-        }
-    }
-
-    /// Returns if the current cell has the same row and column as the apps active row and col
-    ///
-    /// ## Returns
-    ///
-    /// True if they are the same, else false
-    fn is_active(&self) -> bool {
-        self.app.active() == (self.row, self.col)
-    }
-
-    /// Used to get the block of the current cell
-    ///
-    /// Changes based on if the cell is active or not
-    ///
-    /// ## Arguments
-    ///
-    /// * bg_color - The background-color to use
-    fn block(&self, bg_color: Color) -> Block {
-        let color = bg_color;
-        Block::default()
-            .style(Style::default().bg(color).fg(color))
-            .borders(Borders::ALL)
-            .border_style(Style::default())
-            .border_type(BorderType::Plain)
-    }
-
-    /// Used to get the text-style of the current cell
-    ///
-    /// The foreground color is based on if the number is in the "emtpy"-set or the "tries"-set
-    /// The background color is based on if the current cell is active or not, together with also
-    /// changing if the number should be bold or not
-    ///
-    /// ## Arguments
-    ///
-    /// * bg_color - The back-ground color to use
-    fn text_style(&self, bg_color: Color) -> Style {
-        Style::default()
-            .fg(if self.old { Color::Blue } else { Color::Black })
-            .bg(if self.is_active() {
-                Color::Cyan
-            } else {
-                bg_color
-            })
-            .add_modifier(if self.is_active() {
-                Modifier::BOLD
-            } else {
-                Modifier::empty()
-            })
-    }
-}
-
 impl std::fmt::Display for Cell<'_> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(f, "{}", self.value)
@@ -205,6 +143,46 @@ impl App {
     }
 }
 
+/// Used to get the block of the current cell
+///
+/// Changes based on if the cell is active or not
+///
+/// ## Arguments
+///
+/// * bg_color - The background-color to use
+fn block<'a>(bg_color: Color) -> Block<'a> {
+    let color = bg_color;
+    Block::default()
+        .style(Style::default().bg(color).fg(color))
+        .borders(Borders::ALL)
+        .border_style(Style::default())
+        .border_type(BorderType::Plain)
+}
+
+/// Used to get the text-style of the current cell
+///
+/// The foreground color is based on if the number is in the "emtpy"-set or the "tries"-set
+/// The background color is based on if the current cell is active or not, together with also
+/// changing if the number should be bold or not
+///
+/// ## Arguments
+///
+/// * bg_color - The back-ground color to use
+fn text_style(old: bool, is_active: bool, bg_color: Color) -> Style {
+    Style::default()
+        .fg(if old { Color::Blue } else { Color::Black })
+        .bg(if is_active {
+            Color::Cyan
+        } else {
+            bg_color
+        })
+        .add_modifier(if is_active {
+            Modifier::BOLD
+        } else {
+            Modifier::empty()
+        })
+}
+
 /// Sets up the board
 ///
 /// ## Arguments
@@ -232,31 +210,35 @@ fn board<B: Backend>(f: &mut Frame<B>, window: Rect, app: &mut App) {
                 _ => Color::White,
             };
 
+            // Convert to "proper" axis
             let (c, r) = square_to_point(r, c);
-            let cell = Cell::new(app, r, c);
-            let text = format!(" {}  ", cell);
+
+            let (value, old) = get_string_value(r, c, &app.board);
+            let text = format!(" {} ", value);
+
+            let is_active = app.active() == (r, c);
 
             let paragraph = Paragraph::new(text)
                 .alignment(Alignment::Center)
-                .style(cell.text_style(bg_color));
+                .style(text_style(old, is_active, bg_color));
 
             let text_rect = Rect {
                 x: col_rect.x + 1,
                 y: col_rect.y + 1,
-                width: 4,
+                width: 3,
                 height: 1,
             };
 
-            f.render_widget(cell.block(bg_color), col_rect);
+            f.render_widget(block(bg_color), col_rect);
             f.render_widget(paragraph, text_rect);
         }
 
-        f.render_widget(
-            Block::default()
-                .borders(Borders::ALL)
-                .border_style(Style::default().fg(Color::Black)),
-            row_rect,
-        );
+        //f.render_widget(
+        //    Block::default()
+        //        .borders(Borders::ALL)
+        //        .border_style(Style::default().fg(Color::Black)),
+        //    row_rect,
+        //);
     }
 }
 
