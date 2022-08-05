@@ -1,11 +1,7 @@
 mod board;
-mod position;
 mod term;
 
-use std::{
-    error::Error,
-    io::{self, Stdout},
-};
+use std::io::{self, Stdout};
 
 use board::Board;
 
@@ -205,11 +201,7 @@ impl App {
     /// a boolean if it succeeded
     fn enter(&mut self, digit: usize) -> bool {
         let (row, col) = self.active();
-        if self.board.add_number(col, row, digit) {
-            true
-        } else {
-            false
-        }
+        self.board.add_number(col, row, digit)
     }
 }
 
@@ -231,7 +223,6 @@ fn board<B: Backend>(f: &mut Frame<B>, window: Rect, app: &mut App) {
     let large_cells = split_in_3x3(rects);
 
     for (r, row_rect) in large_cells.into_iter().enumerate() {
-
         // Splits each rectangle into a 3x3
         let col_rects = split_in_3x3(row_rect);
 
@@ -479,14 +470,14 @@ fn run_app(terminal: &mut Term, mut app: App) -> io::Result<()> {
             status |= 0x1
         }
 
-        if status & 0x0 == 0x1 {
+        if status & 0x1 == 0x1 {
             return Ok(());
         }
     }
 }
 
 #[deny(clippy::pedantic)]
-fn main() -> Result<(), Box<dyn Error>> {
+fn main() {
     let app = App::new();
 
     let mut terminal = Term::new();
@@ -495,8 +486,6 @@ fn main() -> Result<(), Box<dyn Error>> {
     let res = run_app(&mut terminal, app);
 
     if let Err(err) = res {
-        println!("{:?}", err)
+        println!("{:?}", err);
     }
-
-    Ok(())
 }

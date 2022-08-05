@@ -366,12 +366,12 @@ impl std::fmt::Display for Board {
             for (x, value) in each.iter().enumerate() {
                 output.push(if let Some(value) = value {
                     if self.empty[y][x] == None {
-                        *value as u8 + '0' as u8
+                        *value as u8 + b'0'
                     } else {
-                        *value as u8 + 'a' as u8
+                        *value as u8 + b'a'
                     }
                 } else {
-                    '.' as u8
+                    b'.'
                 } as char);
             }
         }
