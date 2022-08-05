@@ -80,7 +80,7 @@ impl<'a> Cell<'a> {
 
     fn text_style(&self, bg_color: Color) -> Style {
         Style::default()
-            .fg(if self.old { Color::Red } else { Color::Black })
+            .fg(if self.old { Color::Blue } else { Color::Black })
             .bg(if self.is_active() {
                 Color::Cyan
             } else {
