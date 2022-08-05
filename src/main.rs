@@ -36,6 +36,20 @@ struct Cell<'a> {
 const TILE_SIZE: u16 = 3;
 const SUDOKU_SIZE: u16 = TILE_SIZE * board::SIDE as u16;
 
+/// Function to get the string value from the specific part of the board
+///
+/// ## Arguments
+///
+/// * row - The row to get from
+/// * col - The column to get from
+/// * board - The board to get the element from
+///
+/// ## Returns
+///
+/// (the value, boolean)
+/// * The Value - is the value to get
+/// * Boolean - The boolean is true if the value is in the "Empty" board, and not just in the
+/// "tries" board
 fn get_string_value(row: usize, col: usize, board: &Board) -> (String, bool) {
     // Is there a number in the "empty"-board?
     if let Some(val) = board.empty[row][col] {
@@ -66,6 +80,9 @@ impl<'a> Cell<'a> {
         self.app.active() == (self.row, self.col)
     }
 
+    /// Used to get the block of the current cell
+    ///
+    /// Changes based on if the cell is active or not
     fn block(&self) -> Block {
         Block::default().style(
             Style::default()
@@ -78,6 +95,15 @@ impl<'a> Cell<'a> {
         )
     }
 
+    /// Used to get the text-style of the current cell
+    ///
+    /// The foreground color is based on if the number is in the "emtpy"-set or the "tries"-set
+    /// The background color is based on if the current cell is active or not, together with also
+    /// changing if the number should be bold or not
+    ///
+    /// ## Arguments
+    ///
+    /// * bg_color - The back-ground color to use
     fn text_style(&self, bg_color: Color) -> Style {
         Style::default()
             .fg(if self.old { Color::Blue } else { Color::Black })
@@ -101,9 +127,13 @@ impl std::fmt::Display for Cell<'_> {
 }
 
 struct App {
+    /// The board to act upon
     board: Board,
+    /// The current active column position
     active_column: isize,
+    /// The current active row position
     active_row: isize,
+    /// The number of currently filled squares
     filled_squares: usize,
 }
 
