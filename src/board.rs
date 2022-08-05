@@ -1,4 +1,3 @@
-use crate::position::Position;
 use rand::{seq::SliceRandom, thread_rng};
 
 pub const BASE: usize = 3;
@@ -11,28 +10,26 @@ pub const SIDE: usize = BASE * BASE;
 /// *s x is the coordinate on the x-axis,
 /// *s y is the coordinate on the y-axis
 fn get_square(x: usize, y: usize) -> usize {
-    let x = x % BASE;
-    let y = y % BASE;
-    if y == 0 {
-        if x == 0 {
+    if y < BASE {
+        if x < BASE {
             0
-        } else if x == 1 {
+        } else if x < 6 {
             1
         } else {
             2
         }
-    } else if y == 1 {
-        if x == 0 {
+    } else if y < 6 {
+        if x < BASE {
             3
-        } else if x == 1 {
+        } else if x < 6 {
             4
         } else {
             5
         }
     } else {
-        if x == 0 {
+        if x < BASE {
             6
-        } else if x == 1 {
+        } else if x < 6 {
             7
         } else {
             8
@@ -113,13 +110,12 @@ impl Board {
 
         let empty_squares = removal(&mut positions) + 1;
 
-        let board = Self {
+        Self {
             empty: Box::new(positions),
             tries: Box::new(positions),
             empty_squares,
             filled_squares: 0,
-        };
-        board
+        }
     }
 
     /// Create a mew empty board, with all positions filled with no value
@@ -240,7 +236,7 @@ impl Board {
         } else {
             None
         };
-        if let None = self.empty[y][x] {
+        if self.empty[y][x].is_none() {
             self[(y, x)] = num;
             self.filled_squares += 1;
             true
@@ -285,7 +281,7 @@ impl Board {
             let pos = self[(row, column)];
             if let Some(value) = pos {
                 let pos = 1 << value;
-                if !(((tests & pos) >> value) == 1) {
+                if ((tests & pos) >> value) != 1 {
                     tests |= pos;
                 } else {
                     return false;
@@ -295,27 +291,6 @@ impl Board {
             }
         }
         0b111111111 == tests
-    }
-
-    /// Tests if a number is already in the row
-    ///
-    /// ## Arguments
-    ///
-    /// * row - the row to test
-    /// * num - the number to test in the row
-    ///
-    /// ## Returns
-    ///
-    /// Return true if the number is NOT in the row, else false
-    pub fn num_in_row(&self, row: usize, num: usize) -> bool {
-        for column in 0..SIDE {
-            if let Some(val) = self[(row, column)] {
-                if val == num {
-                    return false
-                }
-            }
-        }
-        true
     }
 
     /// Method to test a given column for if it is correct
@@ -333,7 +308,7 @@ impl Board {
             let pos = self[(row, column)];
             if let Some(value) = pos {
                 let pos = 1 << value;
-                if !(((tests & pos) >> value) == 1) {
+                if ((tests & pos) >> value) != 1 {
                     tests |= pos;
                 } else {
                     return false;
@@ -343,27 +318,6 @@ impl Board {
             }
         }
         0b111111111 == tests
-    }
-
-    /// Tests if a number is already in the column
-    ///
-    /// ## Arguments
-    ///
-    /// * column - the column to test
-    /// * num - the number to test in the row
-    ///
-    /// ## Returns
-    ///
-    /// Return true if the number is NOT in the column, else false
-    pub fn num_in_column(&self, column: usize, num: usize) -> bool {
-        for row in 0..SIDE {
-            if let Some(val) = self[(row, column)] {
-                if val == num {
-                    return false
-                }
-            }
-        }
-        true
     }
 
     /// Method to test a square for if it is correct
@@ -385,7 +339,7 @@ impl Board {
             let pos = self[(first, second)];
             if let Some(value) = pos {
                 let pos = 1 << value;
-                if !(((tests & pos) >> value) == 1) {
+                if ((tests & pos) >> value) != 1 {
                     tests |= pos;
                 } else {
                     return false;
@@ -396,28 +350,9 @@ impl Board {
         }
         0b111111111 == tests
     }
+}
 
-    /// Tests if a number is already in the square
-    ///
-    /// ## Arguments
-    ///
-    /// * square - the square to test
-    /// * num - the number to test in the row
-    ///
-    /// ## Returns
-    ///
-    /// Return true if the number is NOT in the square, else false
-    pub fn num_in_square(&self, square: usize, num: usize) -> bool {
-        for position in 0..SIDE {
-            let (first, second) = get_index(square, position);
-            if let Some(value) = self[(first, second)] {
-                if value == num {
-                    return false;
-                }
-            }
-        }
-        true
-    }
+impl std::fmt::Display for Board {
 
     /// Used to convert the board to a parseable string
     ///
@@ -425,7 +360,7 @@ impl Board {
     /// 
     /// a string where the value None is a '.', a value in the tries is the number,
     /// and a value in the empty as a char, with 'a' == 0
-    pub fn to_string(&self) -> String {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let mut output = vec![];
         for (y, each) in self.tries.iter().enumerate() {
             for (x, value) in each.iter().enumerate() {
@@ -440,13 +375,14 @@ impl Board {
                 } as char);
             }
         }
-        String::from_iter(output)
+        let output = String::from_iter(output);
+        write!(f, "{}", output)
     }
 }
 
 impl std::fmt::Debug for Board {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "\n")?;
+        writeln!(f)?;
         for each in self.empty.iter() {
             for each in each {
                 if let Some(val) = each {
@@ -455,23 +391,7 @@ impl std::fmt::Debug for Board {
                     write!(f, "| |")?;
                 }
             }
-            write!(f, "\n")?;
-        }
-        write!(f, "")
-    }
-}
-
-impl std::fmt::Display for Board {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        for each in self.empty.iter() {
-            for each in each {
-                if let Some(val) = each {
-                    write!(f, "|{}|", val + 1)?;
-                } else {
-                    write!(f, "| |")?;
-                }
-            }
-            write!(f, "\n")?;
+            writeln!(f)?;
         }
         write!(f, "")
     }
@@ -608,39 +528,6 @@ mod board_test {
         assert!(!board.add_number(0, 0, 1));
         assert!(board.add_number(5, 0, 1));
         assert!(board.add_number(4, 4, 1));
-    }
-
-    #[test]
-    fn test_number_rows() {
-        let board = get_empty_board();
-
-        assert!(board.num_in_row(0, 1));
-
-        assert!(board.num_in_row(1, 1));
-
-        assert!(board.num_in_row(8, 1));
-    }
-
-    #[test]
-    fn test_number_columns() {
-        let board = get_empty_board();
-
-        assert!(board.num_in_column(0, 1));
-
-        assert!(board.num_in_column(1, 1));
-
-        assert!(board.num_in_column(8, 1));
-    }
-
-    #[test]
-    fn test_number_squares() {
-        let board = get_empty_board();
-
-        assert!(board.num_in_square(0, 1));
-
-        assert!(board.num_in_square(1, 1));
-
-        assert!(board.num_in_square(8, 1));
     }
 
     #[test]

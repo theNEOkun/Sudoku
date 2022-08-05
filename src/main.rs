@@ -96,11 +96,6 @@ impl<'a> Cell<'a> {
     ///
     /// * bg_color - The background-color to use
     fn block(&self, bg_color: Color) -> Block {
-        let color = if self.is_active() {
-            Color::Cyan
-        } else {
-            bg_color
-        };
         let color = bg_color;
         Block::default()
             .style(Style::default().bg(color).fg(color))
@@ -480,10 +475,8 @@ fn run_app(terminal: &mut Term, mut app: App) -> io::Result<()> {
             }
         }
 
-        if app.board.test_filled() {
-            if app.board.test_board() {
-                status |= 0x1
-            }
+        if app.board.test_filled() && app.board.test_board() {
+            status |= 0x1
         }
 
         if status & 0x0 == 0x1 {
