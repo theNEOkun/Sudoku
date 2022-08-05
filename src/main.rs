@@ -16,7 +16,7 @@ use tui::{
     layout::{Alignment, Constraint, Direction, Layout, Rect},
     style::{Color, Modifier, Style},
     text::Spans,
-    widgets::{Block, Borders, Paragraph},
+    widgets::{Block, BorderType, Borders, Paragraph},
     Frame,
 };
 
@@ -33,7 +33,10 @@ struct Cell<'a> {
     value: String,
 }
 
+/// The size of each tile
 const TILE_SIZE: u16 = 3;
+
+/// The size of the entire sudoku-board
 const SUDOKU_SIZE: u16 = TILE_SIZE * board::SIDE as u16;
 
 /// Function to get the string value from the specific part of the board
@@ -76,6 +79,11 @@ impl<'a> Cell<'a> {
         }
     }
 
+    /// Returns if the current cell has the same row and column as the apps active row and col
+    ///
+    /// ## Returns
+    ///
+    /// True if they are the same, else false
     fn is_active(&self) -> bool {
         self.app.active() == (self.row, self.col)
     }
@@ -83,16 +91,22 @@ impl<'a> Cell<'a> {
     /// Used to get the block of the current cell
     ///
     /// Changes based on if the cell is active or not
-    fn block(&self) -> Block {
-        Block::default().style(
-            Style::default()
-                .bg(Color::Black)
-                .fg(if self.is_active() {
-                    Color::Cyan
-                } else {
-                    Color::White
-                }),
-        )
+    ///
+    /// ## Arguments
+    ///
+    /// * bg_color - The background-color to use
+    fn block(&self, bg_color: Color) -> Block {
+        let color = if self.is_active() {
+            Color::Cyan
+        } else {
+            bg_color
+        };
+        let color = bg_color;
+        Block::default()
+            .style(Style::default().bg(color).fg(color))
+            .borders(Borders::ALL)
+            .border_style(Style::default())
+            .border_type(BorderType::Plain)
     }
 
     /// Used to get the text-style of the current cell
@@ -112,11 +126,11 @@ impl<'a> Cell<'a> {
             } else {
                 bg_color
             })
-                .add_modifier(if self.is_active() {
-                    Modifier::BOLD
-                } else {
-                    Modifier::empty()
-                })
+            .add_modifier(if self.is_active() {
+                Modifier::BOLD
+            } else {
+                Modifier::empty()
+            })
     }
 }
 
@@ -229,7 +243,7 @@ impl App {
 /// * app - is the app to be run from
 fn board<B: Backend>(f: &mut Frame<B>, window: Rect, app: &mut App) {
     let rects = Rect {
-        x: (window.x + SUDOKU_SIZE / 4),
+        x: window.x + (SUDOKU_SIZE),
         y: (window.y + SUDOKU_SIZE / 8),
         width: SUDOKU_SIZE * 2,
         height: SUDOKU_SIZE,
@@ -248,7 +262,7 @@ fn board<B: Backend>(f: &mut Frame<B>, window: Rect, app: &mut App) {
 
             let (c, r) = square_to_point(r, c);
             let cell = Cell::new(app, r, c);
-            let text = format!(" {} ", cell);
+            let text = format!(" {}  ", cell);
 
             let paragraph = Paragraph::new(text)
                 .alignment(Alignment::Center)
@@ -258,12 +272,19 @@ fn board<B: Backend>(f: &mut Frame<B>, window: Rect, app: &mut App) {
                 x: col_rect.x + 1,
                 y: col_rect.y + 1,
                 width: 4,
-                height: 2,
+                height: 1,
             };
 
-            f.render_widget(cell.block(), col_rect);
+            f.render_widget(cell.block(bg_color), col_rect);
             f.render_widget(paragraph, text_rect);
         }
+
+        f.render_widget(
+            Block::default()
+                .borders(Borders::ALL)
+                .border_style(Style::default().fg(Color::Black)),
+            row_rect,
+        );
     }
 }
 
@@ -363,18 +384,10 @@ fn info_window<B: Backend>(f: &mut Frame<B>, window: Rect, status: u8) {
     .block(Block::default().borders(Borders::ALL))
     .alignment(Alignment::Left);
     let paragraph = Paragraph::new(vec![
-        Spans::from(String::from(
-            "↑↓←→ for up/down/left/right"
-        )),
-        Spans::from(String::from(
-            "1-9 for adding a number"
-        )),
-        Spans::from(String::from(
-            "Space or 0 for removing a number"
-        )),
-        Spans::from(String::from(
-            "S to save L to load"
-        )),
+        Spans::from(String::from("↑↓←→ for up/down/left/right")),
+        Spans::from(String::from("1-9 for adding a number")),
+        Spans::from(String::from("Space or 0 for removing a number")),
+        Spans::from(String::from("S to save L to load")),
     ])
     .block(Block::default().borders(Borders::ALL))
     .alignment(Alignment::Center);
