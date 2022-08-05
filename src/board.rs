@@ -11,26 +11,28 @@ pub const SIDE: usize = BASE * BASE;
 /// *s x is the coordinate on the x-axis,
 /// *s y is the coordinate on the y-axis
 fn get_square(x: usize, y: usize) -> usize {
-    if y < BASE {
-        if x < BASE {
+    let x = x % BASE;
+    let y = y % BASE;
+    if y == 0 {
+        if x == 0 {
             0
-        } else if x < 6 {
+        } else if x == 1 {
             1
         } else {
             2
         }
-    } else if y < 6 {
-        if x < BASE {
+    } else if y == 1 {
+        if x == 0 {
             3
-        } else if x < 6 {
+        } else if x == 1 {
             4
         } else {
             5
         }
     } else {
-        if x < BASE {
+        if x == 0 {
             6
-        } else if x < 6 {
+        } else if x == 1 {
             7
         } else {
             8
@@ -72,17 +74,13 @@ fn removal(position: &mut [[Option<usize>; SIDE]; SIDE]) -> usize {
     empties
 }
 
-fn create_empty_array() -> [[Option<usize>; SIDE]; SIDE] {
-    let mut vec = [[None; SIDE]; SIDE];
-    vec
-}
-
 /// is the matrix of which the sudoku-square is
 /// [position](../position/struct.Position.html)
 pub struct Board {
     pub empty: Box<[[Option<usize>; SIDE]; SIDE]>,
     pub tries: Box<[[Option<usize>; SIDE]; SIDE]>,
     pub empty_squares: usize,
+    pub filled_squares: usize,
 }
 
 const NUMBERS: [usize; 9] = [0, 1, 2, 3, 4, 5, 6, 7, 8];
@@ -119,17 +117,19 @@ impl Board {
             empty: Box::new(positions),
             tries: Box::new(positions),
             empty_squares,
+            filled_squares: 0,
         };
         board
     }
 
     /// Create a mew empty board, with all positions filled with no value
     pub fn new_empty() -> Self {
-        let positions = create_empty_array();
+        let positions = [[None; SIDE]; SIDE];
         Self {
             empty: Box::new(positions),
             tries: Box::new(positions),
             empty_squares: SIDE* SIDE,
+            filled_squares: 0,
         }
     }
 
@@ -157,6 +157,7 @@ impl Board {
             empty: Box::new(filled),
             tries: Box::new(filled),
             empty_squares: SIDE* SIDE,
+            filled_squares: 0,
         }
     }
 
@@ -183,6 +184,7 @@ impl Board {
             empty: Box::new(filled),
             tries: Box::new(filled),
             empty_squares: SIDE * SIDE,
+            filled_squares: 0,
         }
     }
 
@@ -219,6 +221,7 @@ impl Board {
             empty: Box::new(old_positions),
             tries: Box::new(positions),
             empty_squares,
+            filled_squares: SIDE * SIDE - empty_squares,
         }
     }
 
@@ -238,16 +241,21 @@ impl Board {
             None
         };
         if let None = self.empty[y][x] {
-            // let square = get_square(x, y);
-            // if self.num_in_row(y, num) && self.num_in_column(x, num) && self.num_in_square(square, num) {
-                self[(y, x)] = num;
-                true
-            // } else {
-            //     false
-            // }
+            self[(y, x)] = num;
+            self.filled_squares += 1;
+            true
         } else {
             false
         }
+    }
+
+    /// Used to test if the board has been filled
+    ///
+    /// ## Returns
+    ///
+    /// True if the number of filled squares is the same as the number of empty squares
+    pub fn test_filled(&self) -> bool {
+        self.filled_squares == self.empty_squares
     }
 
     /// Method to test the whole board

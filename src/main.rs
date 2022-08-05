@@ -147,8 +147,6 @@ struct App {
     active_column: isize,
     /// The current active row position
     active_row: isize,
-    /// The number of currently filled squares
-    filled_squares: usize,
 }
 
 impl App {
@@ -157,7 +155,6 @@ impl App {
             board: Board::new(),
             active_column: (board::SIDE / 2) as isize,
             active_row: (board::SIDE / 2) as isize,
-            filled_squares: 0,
         }
     }
 
@@ -214,20 +211,6 @@ impl App {
     fn enter(&mut self, digit: usize) -> bool {
         let (row, col) = self.active();
         if self.board.add_number(col, row, digit) {
-            self.filled_squares += 1;
-            true
-        } else {
-            false
-        }
-    }
-
-    /// Checks if the number of filled squares are the same as empty squares on the board
-    ///
-    /// ## Returns
-    ///
-    /// true if they are the same, else false"
-    fn finished(&self) -> bool {
-        if self.filled_squares == self.board.empty_squares {
             true
         } else {
             false
@@ -497,7 +480,7 @@ fn run_app(terminal: &mut Term, mut app: App) -> io::Result<()> {
             }
         }
 
-        if app.finished() {
+        if app.board.test_filled() {
             if app.board.test_board() {
                 status |= 0x1
             }
