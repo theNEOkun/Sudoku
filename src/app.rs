@@ -62,7 +62,9 @@ pub struct App {
 impl App {
     pub fn new(difficulty: Difficulties, file: Option<String>) -> Self {
         if let Some(file) = file {
-            let board = Board::from_string(std::fs::read_to_string(&file).expect("That file does not exist here"));
+            let board = Board::from_string(
+                std::fs::read_to_string(&file).expect("That file does not exist here"),
+            );
             Self {
                 board,
                 active_column: (board::SIDE / 2) as isize,
@@ -179,8 +181,8 @@ fn text_style(old: bool, is_active: bool, bg_color: Color) -> Style {
 /// * app - is the app to be run from
 fn board<B: Backend>(f: &mut Frame<B>, window: Rect, app: &mut App) {
     let rects = Rect {
-        x: window.x + SUDOKU_SIZE / 4,
-        y: (window.y + SUDOKU_SIZE / 8),
+        x: window.x + (SUDOKU_SIZE / 4),
+        y: window.y + (SUDOKU_SIZE / 8),
         width: SUDOKU_SIZE * 2,
         height: SUDOKU_SIZE,
     };
@@ -322,16 +324,16 @@ fn info_window<B: Backend>(f: &mut Frame<B>, window: Rect, status: u8) {
             }
         )),
         Spans::from(format!(
-            "Loaded 1: {} \n",
-            if status & 0b01000000 == 0b01000000 {
+            "All positions filled: {} \n",
+            if status & 0x20 == 0x20{
                 "true"
             } else {
                 "false"
             }
         )),
         Spans::from(format!(
-            "Loaded 2: {} \n",
-            if status & 0b00100000 == 0b00100000 {
+            "All positions correct: {} \n",
+            if status & 0x40 == 0x40 {
                 "true"
             } else {
                 "false"
@@ -354,13 +356,98 @@ fn info_window<B: Backend>(f: &mut Frame<B>, window: Rect, status: u8) {
     f.render_widget(paragraph, rect[1]);
 }
 
+const CLEAR_FLAG: u8 = 0x1;
+
+/// Handles the input of the keys
+/// Placed here due to being quite the few
+///
+/// ## Arguments
+/// * key - the key to match agains
+/// * app - the app the handle onto
+/// * status - the current status of the app
+///
+/// ## Returns
+///
+/// The status again, potentially changed
+fn read_key(key: KeyCode, app: &mut App, status: u8) -> u8 {
+    let mut status = status;
+    match key {
+        KeyCode::Left => {
+            app.left();
+        }
+        KeyCode::Right => {
+            app.right();
+        }
+        KeyCode::Up => {
+            app.up();
+        }
+        KeyCode::Down => {
+            app.down();
+        }
+        KeyCode::Char('s') => {
+            std::fs::write(&app.file_name, app.board.to_string()).expect("Write failed");
+            status &= CLEAR_FLAG;
+            status |= 0x2;
+        }
+        KeyCode::Char('l') => {
+            app.board =
+                Board::from_string(std::fs::read_to_string(&app.file_name).expect("No such file"));
+            status &= CLEAR_FLAG;
+            status |= 0x4;
+        }
+        KeyCode::Char('1') => {
+            app.enter(1);
+            status &= CLEAR_FLAG;
+        }
+        KeyCode::Char('2') => {
+            app.enter(2);
+            status &= CLEAR_FLAG;
+        }
+        KeyCode::Char('3') => {
+            app.enter(3);
+            status &= CLEAR_FLAG;
+        }
+        KeyCode::Char('4') => {
+            app.enter(4);
+            status &= CLEAR_FLAG;
+        }
+        KeyCode::Char('5') => {
+            app.enter(5);
+            status &= CLEAR_FLAG;
+        }
+        KeyCode::Char('6') => {
+            app.enter(6);
+            status &= CLEAR_FLAG;
+        }
+        KeyCode::Char('7') => {
+            app.enter(7);
+            status &= CLEAR_FLAG;
+        }
+        KeyCode::Char('8') => {
+            app.enter(8);
+            status &= CLEAR_FLAG;
+        }
+        KeyCode::Char('9') => {
+            app.enter(9);
+            status &= CLEAR_FLAG;
+        }
+        KeyCode::Char('0') | KeyCode::Char(' ') => {
+            app.enter(0);
+            status &= CLEAR_FLAG;
+        }
+        _ => {}
+    }
+    status
+}
+
 pub fn run_app(terminal: &mut Term, mut app: App) -> io::Result<()> {
     // Bitflags
     // 0x1 = Is the solution correct?
     // 0x2 = Is it saved?
     // 0x4 = Is it loaded
+    // 0x20 = all positions filled
+    // 0x40 = all positions correct
     let mut status: u8 = 0x0;
-    let clear_flag = 0x1;
     loop {
         terminal.render(&mut |f: &mut Frame<CrosstermBackend<Stdout>>| {
             let outer_block = Block::default().borders(Borders::ALL);
@@ -384,84 +471,46 @@ pub fn run_app(terminal: &mut Term, mut app: App) -> io::Result<()> {
         });
 
         if let Event::Key(key) = event::read()? {
-            match key.code {
+            status = match key.code {
                 KeyCode::Char('q') => return Ok(()),
-                KeyCode::Left => {
-                    app.left();
-                }
-                KeyCode::Right => {
-                    app.right();
-                }
-                KeyCode::Up => {
-                    app.up();
-                }
-                KeyCode::Down => {
-                    app.down();
-                }
-                KeyCode::Char('s') => {
-                    std::fs::write(&app.file_name, app.board.to_string())?;
-                    status &= clear_flag;
-                    status |= 0x2;
-                }
-                KeyCode::Char('l') => {
-                    app.board = Board::from_string(std::fs::read_to_string(&app.file_name).expect("No such file"));
-                    status &= clear_flag;
-                    status |= 0x4;
-                }
-                KeyCode::Char('1') => {
-                    app.enter(1);
-                    status &= clear_flag;
-                }
-                KeyCode::Char('2') => {
-                    app.enter(2);
-                    status &= clear_flag;
-                }
-                KeyCode::Char('3') => {
-                    app.enter(3);
-                    status &= clear_flag;
-                }
-                KeyCode::Char('4') => {
-                    app.enter(4);
-                    status &= clear_flag;
-                }
-                KeyCode::Char('5') => {
-                    app.enter(5);
-                    status &= clear_flag;
-                }
-                KeyCode::Char('6') => {
-                    app.enter(6);
-                    status &= clear_flag;
-                }
-                KeyCode::Char('7') => {
-                    app.enter(7);
-                    status &= clear_flag;
-                }
-                KeyCode::Char('8') => {
-                    app.enter(8);
-                    status &= clear_flag;
-                }
-                KeyCode::Char('9') => {
-                    app.enter(9);
-                    status &= clear_flag;
-                }
-                KeyCode::Char('0') | KeyCode::Char(' ') => {
-                    app.enter(0);
-                    status &= clear_flag;
-                }
-                _ => {}
+                rest => read_key(rest, &mut app, status),
             }
         }
 
         if app.board.test_filled() {
-            status |= 0b01000000;
+            status |= 0x20;
         }
 
         if app.board.test_board() {
-            status |= 0b00100000;
+            status |= 0x40;
         }
 
         if app.board.test_filled() && app.board.test_board() {
-            status |= 0x1
+            status |= 0x1;
+            break;
+        }
+    }
+    loop {
+        terminal.render(&mut |frame| {
+            let message = format!("Congratulations, you won!");
+            let rect = Rect {
+                x: frame.size().x,
+                y: frame.size().y,
+                width: frame.size().width,
+                height: frame.size().height,
+            };
+            let paragraph = Paragraph::new(vec![
+                Spans::from(String::from("Q to Close")),
+                Spans::from(message),
+            ]);
+            frame.render_widget(paragraph, rect);
+        });
+
+        if let Event::Key(key) = event::read()? {
+            match key.code {
+                KeyCode::Char('q') => return Ok(()),
+                _ => {}
+            }
         }
     }
 }
