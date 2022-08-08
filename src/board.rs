@@ -1,4 +1,8 @@
+pub mod difficulties;
+
 use rand::{seq::SliceRandom, thread_rng};
+
+use self::difficulties::Difficulties;
 
 pub const BASE: usize = 3;
 pub const SIDE: usize = BASE * BASE;
@@ -59,9 +63,9 @@ fn pattern(r: usize, c: usize) -> usize {
 }
 
 /// Used to remove values from the board
-fn removal(position: &mut [[Option<usize>; SIDE]; SIDE]) -> usize {
+fn removal(position: &mut [[Option<usize>; SIDE]; SIDE], diff: Difficulties) -> usize {
     let squares = SIDE * SIDE;
-    let empties = (squares * 3) / 4;
+    let empties = (squares * 3) / diff.value();
     let mut vec = (0..squares).collect::<Vec<usize>>();
     vec.shuffle(&mut thread_rng());
 
@@ -89,7 +93,7 @@ impl Board {
     /// ## Return
     ///
     /// a board with all positions uniquely filled
-    pub fn new() -> Self {
+    pub fn new(difficulty: Difficulties) -> Self {
         let mut positions = [[None; SIDE]; SIDE];
 
         let mut rng = thread_rng();
@@ -108,7 +112,7 @@ impl Board {
             }
         }
 
-        let empty_squares = removal(&mut positions) + 1;
+        let empty_squares = removal(&mut positions, difficulty) + 1;
 
         Self {
             empty: Box::new(positions),

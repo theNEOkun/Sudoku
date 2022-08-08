@@ -9,7 +9,7 @@ use tui::{
 };
 use std::io::{self, Stdout};
 
-use crate::{term::Term, board::{self, Board}};
+use crate::{term::Term, board::{self, Board, difficulties::Difficulties}};
 
 /// The size of each tile
 const TILE_SIZE: u16 = 3;
@@ -55,9 +55,9 @@ pub struct App {
 }
 
 impl App {
-    pub fn new() -> Self {
+    pub fn new(difficulty: Difficulties) -> Self {
         Self {
-            board: Board::new(),
+            board: Board::new(difficulty),
             active_column: (board::SIDE / 2) as isize,
             active_row: (board::SIDE / 2) as isize,
         }
