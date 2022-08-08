@@ -63,7 +63,7 @@ fn pattern(r: usize, c: usize) -> usize {
 }
 
 /// Used to remove values from the board
-fn removal(position: &mut [[Option<usize>; SIDE]; SIDE], diff: Difficulties) -> usize {
+fn removal(position: &mut [[Option<usize>; SIDE]; SIDE], diff: &Difficulties) -> usize {
     let squares = SIDE * SIDE;
     let empties = (squares * 3) / diff.value();
     let mut vec = (0..squares).collect::<Vec<usize>>();
@@ -93,7 +93,7 @@ impl Board {
     /// ## Return
     ///
     /// a board with all positions uniquely filled
-    pub fn new(difficulty: Difficulties) -> Self {
+    pub fn new(difficulty: &Difficulties) -> Self {
         let mut positions = [[None; SIDE]; SIDE];
 
         let mut rng = thread_rng();

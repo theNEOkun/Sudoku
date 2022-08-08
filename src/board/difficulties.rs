@@ -1,3 +1,5 @@
+use std::fmt::Display;
+
 /// Used to change the difficulty of a given puzzle
 #[derive(Debug)]
 pub enum Difficulties {
@@ -34,5 +36,16 @@ impl Difficulties {
             Difficulties::Medium => 8,
             Difficulties::Hard => 4
         }
+    }
+}
+
+impl Display for Difficulties {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let name = match self {
+            Difficulties::Easy => "easy",
+            Difficulties::Medium => "medium",
+            Difficulties::Hard => "hard"
+        };
+        write!(f, "{}", name)
     }
 }

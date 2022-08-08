@@ -55,21 +55,26 @@ pub struct App {
     active_column: isize,
     /// The current active row position
     active_row: isize,
+    /// The file-name to save to
+    file_name: String,
 }
 
 impl App {
     pub fn new(difficulty: Difficulties, file: Option<String>) -> Self {
         if let Some(file) = file {
+            let board = Board::from_string(std::fs::read_to_string(&file).expect("That file does not exist here"));
             Self {
-                board: Board::from_string(file),
+                board,
                 active_column: (board::SIDE / 2) as isize,
                 active_row: (board::SIDE / 2) as isize,
+                file_name: file,
             }
         } else {
             Self {
-                board: Board::new(difficulty),
+                board: Board::new(&difficulty),
                 active_column: (board::SIDE / 2) as isize,
                 active_row: (board::SIDE / 2) as isize,
+                file_name: format!("save-{}", difficulty),
             }
         }
     }
@@ -378,12 +383,12 @@ pub fn run_app(terminal: &mut Term, mut app: App) -> io::Result<()> {
                     app.down();
                 }
                 KeyCode::Char('s') => {
-                    std::fs::write("saved", app.board.to_string())?;
+                    std::fs::write(&app.file_name, app.board.to_string())?;
                     status &= clear_flag;
                     status |= 0x2;
                 }
                 KeyCode::Char('l') => {
-                    app.board = Board::from_string(std::fs::read_to_string("saved")?);
+                    app.board = Board::from_string(std::fs::read_to_string(&app.file_name).expect("No such file"));
                     status &= clear_flag;
                     status |= 0x4;
                 }
