@@ -475,7 +475,7 @@ pub fn run_app(terminal: &mut Term, mut app: App) -> io::Result<()> {
             status |= 0x40;
         }
 
-        if app.board.test_filled() && app.board.test_board() {
+        if app.board.test_board() {
             status |= 0x1;
             break;
         }

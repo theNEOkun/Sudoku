@@ -262,7 +262,7 @@ impl Board {
     ///
     /// True if the number of filled squares is the same as the number of empty squares
     pub fn test_filled(&self) -> bool {
-        self.filled_squares == self.empty_squares
+        (self.filled_squares + self.empty_squares) == SIDE * SIDE
     }
 
     /// Method to test the whole board
