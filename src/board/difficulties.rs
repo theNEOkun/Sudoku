@@ -1,7 +1,7 @@
 use std::fmt::Display;
 
 /// Used to change the difficulty of a given puzzle
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub enum Difficulties {
     Easy,
     Medium,

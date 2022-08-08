@@ -1,3 +1,5 @@
+pub mod states;
+
 use crossterm::event::{self, Event, KeyCode};
 use std::io::{self, Stdout};
 use tui::{
@@ -324,14 +326,6 @@ fn info_window<B: Backend>(f: &mut Frame<B>, window: Rect, status: u8) {
             }
         )),
         Spans::from(format!(
-            "All positions filled: {} \n",
-            if status & 0x20 == 0x20{
-                "true"
-            } else {
-                "false"
-            }
-        )),
-        Spans::from(format!(
             "All positions correct: {} \n",
             if status & 0x40 == 0x40 {
                 "true"
@@ -475,10 +469,6 @@ pub fn run_app(terminal: &mut Term, mut app: App) -> io::Result<()> {
                 KeyCode::Char('q') => return Ok(()),
                 rest => read_key(rest, &mut app, status),
             }
-        }
-
-        if app.board.test_filled() {
-            status |= 0x20;
         }
 
         if app.board.test_board() {
