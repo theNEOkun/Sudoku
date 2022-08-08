@@ -321,6 +321,22 @@ fn info_window<B: Backend>(f: &mut Frame<B>, window: Rect, status: u8) {
                 "false"
             }
         )),
+        Spans::from(format!(
+            "Loaded 1: {} \n",
+            if status & 0b01000000 == 0b01000000 {
+                "true"
+            } else {
+                "false"
+            }
+        )),
+        Spans::from(format!(
+            "Loaded 2: {} \n",
+            if status & 0b00100000 == 0b00100000 {
+                "true"
+            } else {
+                "false"
+            }
+        )),
         Spans::from(String::from("")),
     ])
     .block(Block::default().borders(Borders::ALL))
@@ -436,12 +452,16 @@ pub fn run_app(terminal: &mut Term, mut app: App) -> io::Result<()> {
             }
         }
 
-        if app.board.test_filled() && app.board.test_board() {
-            status |= 0x1
+        if app.board.test_filled() {
+            status |= 0b01000000;
         }
 
-        if status & 0x1 == 0x1 {
-            return Ok(());
+        if app.board.test_board() {
+            status |= 0b00100000;
+        }
+
+        if app.board.test_filled() && app.board.test_board() {
+            status |= 0x1
         }
     }
 }

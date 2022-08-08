@@ -198,6 +198,7 @@ impl Board {
         let mut positions = [[None; SIDE]; SIDE];
         let mut old_positions = [[None; SIDE]; SIDE];
         let mut empty_squares = SIDE * SIDE;
+        let mut filled_squares = 0;
 
         for (pos, each) in string.chars().enumerate() {
             let y = pos/SIDE;
@@ -208,12 +209,13 @@ impl Board {
                 let cur_val = each as usize - '0' as usize;
                 if cur_val < 9 {
                     positions[y][x] = Some(cur_val);
+                    filled_squares += 1;
                 } else {
                     let val = Some(each as usize - 'a' as usize);
                     positions[y][x] = val;
                     old_positions[y][x] = val;
+                    empty_squares -= 1;
                 }
-                empty_squares -= 1;
             };
         }
 
@@ -221,7 +223,7 @@ impl Board {
             empty: Box::new(old_positions),
             tries: Box::new(positions),
             empty_squares,
-            filled_squares: SIDE * SIDE - empty_squares,
+            filled_squares,
         }
     }
 
@@ -241,9 +243,14 @@ impl Board {
             None
         };
         if self.empty[y][x].is_none() {
+            if self[(y, x)].is_none() {
+                self.filled_squares += 1;
+            }
+            if num.is_none() {
+                self.filled_squares -= 1;
+            }
             self[(y, x)] = num;
-            self.filled_squares += 1;
-            true
+            self.test_filled()
         } else {
             false
         }
