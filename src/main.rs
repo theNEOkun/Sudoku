@@ -12,13 +12,23 @@ use board::difficulties::Difficulties;
 struct Args {
     #[clap(short, long, value_parser, default_value_t = 1)]
     difficulty: u8,
+
+    #[clap(short, long, value_parser, default_value = "")]
+    file: String
 }
 
 #[deny(clippy::pedantic)]
 fn main() {
     let args = Args::parse();
     let diff = Difficulties::from_num(args.difficulty);
-    let app = App::new(diff);
+
+    let file = if args.file == "" {
+        None
+    } else {
+        Some(args.file)
+    };
+
+    let app = App::new(diff, file);
     let mut terminal = Term::new();
 
     // create app and run it

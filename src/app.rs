@@ -1,4 +1,5 @@
 use crossterm::event::{self, Event, KeyCode};
+use std::io::{self, Stdout};
 use tui::{
     backend::{Backend, CrosstermBackend},
     layout::{Alignment, Constraint, Direction, Layout, Rect},
@@ -7,9 +8,11 @@ use tui::{
     widgets::{Block, BorderType, Borders, Paragraph},
     Frame,
 };
-use std::io::{self, Stdout};
 
-use crate::{term::Term, board::{self, Board, difficulties::Difficulties}};
+use crate::{
+    board::{self, difficulties::Difficulties, Board},
+    term::Term,
+};
 
 /// The size of each tile
 const TILE_SIZE: u16 = 3;
@@ -55,11 +58,19 @@ pub struct App {
 }
 
 impl App {
-    pub fn new(difficulty: Difficulties) -> Self {
-        Self {
-            board: Board::new(difficulty),
-            active_column: (board::SIDE / 2) as isize,
-            active_row: (board::SIDE / 2) as isize,
+    pub fn new(difficulty: Difficulties, file: Option<String>) -> Self {
+        if let Some(file) = file {
+            Self {
+                board: Board::from_string(file),
+                active_column: (board::SIDE / 2) as isize,
+                active_row: (board::SIDE / 2) as isize,
+            }
+        } else {
+            Self {
+                board: Board::new(difficulty),
+                active_column: (board::SIDE / 2) as isize,
+                active_row: (board::SIDE / 2) as isize,
+            }
         }
     }
 
@@ -147,11 +158,7 @@ fn block<'a>(bg_color: Color) -> Block<'a> {
 fn text_style(old: bool, is_active: bool, bg_color: Color) -> Style {
     Style::default()
         .fg(if old { Color::Blue } else { Color::Black })
-        .bg(if is_active {
-            Color::Cyan
-        } else {
-            bg_color
-        })
+        .bg(if is_active { Color::Cyan } else { bg_color })
         .add_modifier(if is_active {
             Modifier::BOLD
         } else {
